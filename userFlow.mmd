@@ -1,0 +1,24 @@
+---
+config:
+  layout: elk
+---
+flowchart TB
+    A(["Start: User logs in"]) --> B["Create Project → API Key Generated"]
+    B --> C["App sends logs + metrics with API key"]
+    C --> D["Ingestion API validates key → assigns tenant"]
+    D --> E["Store Data: metrics + logs"]
+    E --> F["User opens Dashboard: Metrics / Logs / Services"]
+    F --> G["User creates alert rule: error_rate &gt; 2%"]
+    G --> H["Alert Engine evaluates metric streams"]
+    H -- Threshold Breached --> I{"Incident Triggered?"}
+    H -- Normal --> C
+    I -- Yes --> J["Create Incident Record<br>Snapshot logs + metrics"]
+    I -- No --> C
+    J --> K@{ label: "Send Notifications 'Slack/Email/Webhook'" }
+    K --> L["User opens Incident Page<br>Shows metrics/logs/timeline"]
+    L --> M["AI Copilot analyzes<br>metrics + logs + runbooks"]
+    M --> N["User investigates<br>adds comments"]
+    N --> O["User resolves incident → adds resolution note"]
+    O --> P(["End: System returns to monitoring"])
+
+    K@{ shape: rect}

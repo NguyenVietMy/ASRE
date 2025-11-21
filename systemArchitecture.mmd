@@ -1,0 +1,70 @@
+---
+config:
+  layout: elk
+---
+flowchart LR
+ subgraph CLIENT["Client"]
+        DEV["Engineer / SRE<br>Browser · CLI · SDK"]
+  end
+ subgraph FRONTEND["Frontend"]
+        UI["Next.js Dashboard"]
+  end
+ subgraph GATEWAY["Spring Boot API Gateway"]
+        GW["API Gateway<br>Auth · API Keys · Rate Limiting"]
+        ING_API["Ingestion API<br>/logs /metrics /traces"]
+        APP_API["App Backend<br>Incidents · Rules · Projects"]
+  end
+ subgraph ASYNC["Async Processing Layer"]
+        MQ[("RabbitMQ")]
+        ING_WORKER["Ingestion Worker<br>Batch Metrics/Logs Writes"]
+        ALERT_WORKER["Alert Engine<br>Periodic Rule Eval"]
+  end
+ subgraph AI["AI Microservice · FastAPI"]
+        AICORE["AI Gateway<br>/summary /cluster /anomaly"]
+        ANOM["Anomaly Detection<br>z-score · IsolationForest"]
+        CLUSTER["Log Pattern Clustering<br>Embeddings"]
+        RAG["RAG Engine<br>Supabase pgvector + Runbooks"]
+  end
+ subgraph DATA["Data Layer"]
+        PG[("PostgreSQL – RDS<br>Users · Incidents · Rules")]
+        TSTORE[("TimescaleDB<br>Time-series Metrics")]
+        OSEARCH[("OpenSearch<br>Full-text Log Index")]
+        SUPAVEC[("Supabase pgvector<br>Embedding Store")]
+        CACHE[("Redis<br>Rate Limits · Caching")]
+        S3[("S3<br>Runbook Markdown · Exports")]
+  end
+ subgraph OBS["OpsPilot Observability"]
+        PROM["Prometheus Exporters"]
+        GRAF["Grafana Dashboards"]
+        CW["CloudWatch Metrics/Alarms"]
+  end
+ subgraph AWS["AWS Infra · Terraform"]
+        EKS["EKS Cluster<br>Ingress · Pods · Services"]
+        ALB["ALB · SSL Termination"]
+        RDS["RDS Postgres"]
+        S3B["S3 Buckets"]
+  end
+    DEV -- HTTPS --> UI
+    UI -- HTTPS --> GW
+    DEV -- Logs/Metrics via SDK --> ING_API
+    ING_API --> MQ
+    ING_API -- Direct write fallback --> PG
+    GW --> APP_API
+    APP_API --> PG & CACHE & ALERT_WORKER
+    MQ --> ING_WORKER
+    ING_WORKER --> TSTORE & OSEARCH
+    ALERT_WORKER --> TSTORE & OSEARCH & PG
+    ALERT_WORKER -- Trigger Incident --> PG
+    APP_API -- Incident Context<br>metrics+logs --> AICORE
+    AICORE --> ANOM & CLUSTER & RAG
+    RAG --> SUPAVEC & S3
+    AICORE -- AI Summary --> APP_API
+    PG <-- Runbooks sync --> S3
+    PG --> SUPAVEC & PROM
+    EKS --> PROM
+    PROM --> GRAF
+    TSTORE --> PROM
+    OSEARCH --> PROM
+    ALB --> GW & ING_API
+    EKS --- GW & ING_API & ING_WORKER & ALERT_WORKER & AICORE
+    RDS --- PG
