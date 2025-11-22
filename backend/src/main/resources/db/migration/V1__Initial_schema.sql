@@ -1,14 +1,8 @@
 ------------------------------------------------------------
--- Extensions
+-- EXTENSIONS (Supabase-safe)
 ------------------------------------------------------------
 
--- UUID generator
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- TimescaleDB
-CREATE EXTENSION IF NOT EXISTS timescaledb;
-
--- pgvector
 CREATE EXTENSION IF NOT EXISTS vector;
 
 ------------------------------------------------------------
@@ -53,7 +47,7 @@ CREATE TABLE project_members (
 );
 
 ------------------------------------------------------------
--- SERVICES
+-- SERVICES (metadata only)
 ------------------------------------------------------------
 
 CREATE TABLE services (
@@ -64,53 +58,8 @@ CREATE TABLE services (
     CONSTRAINT fk_service_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
-
 ------------------------------------------------------------
--- METRICS (TimescaleDB hypertable)
-------------------------------------------------------------
-
-CREATE TABLE metrics (
-    id bigserial PRIMARY KEY,
-    time timestamptz NOT NULL,
-    service_id uuid NOT NULL,
-    metric_name text NOT NULL,
-    value double precision NOT NULL,
-    tags jsonb,
-    CONSTRAINT fk_metrics_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
-);
-
--- Convert into hypertable
-SELECT create_hypertable('metrics', 'time', if_not_exists => TRUE);
-
--- Indexes for fast queries
-CREATE INDEX idx_metrics_lookup
-    ON metrics(service_id, metric_name, time DESC);
-
-CREATE INDEX idx_metrics_tags
-    ON metrics USING GIN (tags);
-
-
-------------------------------------------------------------
--- LOGS (OpenSearch pointer table)
-------------------------------------------------------------
-
-CREATE TABLE log_entries (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    service_id uuid NOT NULL,
-    timestamp timestamptz NOT NULL,
-    level text NOT NULL,
-    message text,
-    opensearch_doc_id text,
-    trace_id text,
-    CONSTRAINT fk_logs_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_logs_service_time ON log_entries(service_id, timestamp DESC);
-CREATE INDEX idx_logs_trace ON log_entries(trace_id);
-
-
-------------------------------------------------------------
--- ALERT RULES
+-- ALERT RULES (metadata)
 ------------------------------------------------------------
 
 CREATE TABLE alert_rules (
@@ -119,7 +68,7 @@ CREATE TABLE alert_rules (
     service_id uuid NOT NULL,
     name text NOT NULL,
     metric_name text NOT NULL,
-    operator text NOT NULL, -- >, <, >=, <=
+    operator text NOT NULL, 
     threshold double precision NOT NULL,
     window_minutes integer NOT NULL,
     duration_minutes integer NOT NULL,
@@ -131,9 +80,8 @@ CREATE TABLE alert_rules (
 
 CREATE INDEX idx_alert_rules_project ON alert_rules(project_id);
 
-
 ------------------------------------------------------------
--- INCIDENTS & EVENTS
+-- INCIDENTS & EVENTS (metadata)
 ------------------------------------------------------------
 
 CREATE TABLE incidents (
@@ -147,7 +95,6 @@ CREATE TABLE incidents (
     summary text,
     ai_summary text,
     severity incident_severity NOT NULL DEFAULT 'medium',
-
     CONSTRAINT fk_incident_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     CONSTRAINT fk_incident_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE,
     CONSTRAINT fk_incident_rule FOREIGN KEY (rule_id) REFERENCES alert_rules(id)
@@ -167,6 +114,21 @@ CREATE TABLE incident_events (
 
 CREATE INDEX idx_incident_events_incident ON incident_events(incident_id);
 
+------------------------------------------------------------
+-- INCIDENT NOTES
+------------------------------------------------------------
+
+CREATE TABLE incident_notes (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id uuid NOT NULL,
+    author_user_id uuid NOT NULL,
+    content text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT fk_notes_incident FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notes_user FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_notes_incident ON incident_notes(incident_id);
 
 ------------------------------------------------------------
 -- RUNBOOKS
@@ -184,26 +146,8 @@ CREATE TABLE runbooks (
 
 CREATE INDEX idx_runbooks_project ON runbooks(project_id);
 
-
 ------------------------------------------------------------
--- INCIDENT NOTES
-------------------------------------------------------------
-
-CREATE TABLE incident_notes (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    incident_id uuid NOT NULL,
-    author_user_id uuid NOT NULL,
-    content text NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT fk_notes_incident FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE CASCADE,
-    CONSTRAINT fk_notes_user FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
-CREATE INDEX idx_notes_incident ON incident_notes(incident_id);
-
-
-------------------------------------------------------------
--- RAG VECTOR TABLE
+-- RAG VECTOR EMBEDDINGS
 ------------------------------------------------------------
 
 CREATE TABLE kb_embeddings (
@@ -219,7 +163,6 @@ CREATE TABLE kb_embeddings (
 
 CREATE INDEX idx_kb_project ON kb_embeddings(project_id);
 CREATE INDEX idx_kb_vector ON kb_embeddings USING ivfflat (embedding vector_cosine_ops);
-
 
 ------------------------------------------------------------
 -- AI RUN HISTORY
@@ -238,28 +181,8 @@ CREATE TABLE ai_runs (
 
 CREATE INDEX idx_ai_incident ON ai_runs(incident_id);
 
-
 ------------------------------------------------------------
--- ANOMALY DETECTION
-------------------------------------------------------------
-
-CREATE TABLE anomaly_detection_results (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    service_id uuid NOT NULL,
-    metric_name text NOT NULL,
-    timestamp timestamptz NOT NULL,
-    z_score double precision NOT NULL,
-    is_anomaly boolean NOT NULL,
-    context jsonb,
-    CONSTRAINT fk_anom_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_anom_lookup
-    ON anomaly_detection_results(service_id, metric_name, timestamp DESC);
-
-
-------------------------------------------------------------
--- PLATFORM INTERNAL METADATA
+-- PLATFORM METADATA
 ------------------------------------------------------------
 
 CREATE TABLE rate_limit_buckets (
