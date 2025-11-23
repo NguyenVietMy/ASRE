@@ -2,6 +2,7 @@
 -- EXTENSIONS
 ------------------------------------------------------------
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 ------------------------------------------------------------
@@ -9,12 +10,13 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 ------------------------------------------------------------
 
 CREATE TABLE metrics (
-    id bigserial PRIMARY KEY,
+    id bigserial,
     time timestamptz NOT NULL,
     service_id uuid NOT NULL,
     metric_name text NOT NULL,
     value double precision NOT NULL,
-    tags jsonb
+    tags jsonb,
+    PRIMARY KEY (time, id)
 );
 
 SELECT create_hypertable('metrics', 'time', if_not_exists => TRUE);
@@ -58,4 +60,3 @@ CREATE TABLE anomaly_detection_results (
 
 CREATE INDEX idx_anom_lookup
     ON anomaly_detection_results(service_id, metric_name, timestamp DESC);
-

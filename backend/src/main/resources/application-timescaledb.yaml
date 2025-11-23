@@ -2,6 +2,7 @@ spring:
   application:
     name: asre
   # Docker Compose enabled for local services (OpenSearch, Redis, RabbitMQ, LocalStack)
+  # TimescaleDB is cloud-hosted, but we still need local services
   docker:
     compose:
       enabled: true
@@ -9,13 +10,14 @@ spring:
       lifecycle-management: start_and_stop
       readiness-timeout: 5m
   datasource:
-    url: ${SUPABASE_DB_URL}
-    username: ${SUPABASE_DB_USER}
-    password: ${SUPABASE_DB_PASSWORD}
+    url: ${TIMESCALEDB_URL:jdbc:postgresql://localhost:5432/asre?sslmode=prefer}
+    username: ${TIMESCALEDB_USER:postgres}
+    password: ${TIMESCALEDB_PASSWORD:yourpassword}
     driver-class-name: org.postgresql.Driver
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    # Include both regular migrations and TimescaleDB migrations
+    locations: classpath:db/migration,classpath:db/migration-timescaledb
     baseline-on-migrate: true
     validate-on-migrate: true
 

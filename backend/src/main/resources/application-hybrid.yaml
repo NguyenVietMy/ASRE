@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: asre
+  # Hybrid profile: Use both Supabase (metadata) and TimescaleDB (time-series)
+  docker:
+    compose:
+      enabled: true
+      file: compose.yaml
+      lifecycle-management: start_and_stop
+      readiness-timeout: 5m
+
+  # Disable default Flyway auto-configuration (we'll configure manually)
+  flyway:
+    enabled: false
+
+  # Primary datasource: Supabase (for metadata, users, projects, incidents, pgvector)
+  datasource:
+    primary:
+      url: ${SUPABASE_DB_URL}
+      username: ${SUPABASE_DB_USER}
+      password: ${SUPABASE_DB_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+    # Secondary datasource: TimescaleDB (for time-series: metrics, logs, anomalies)
+    timescaledb:
+      url: ${TIMESCALEDB_URL}
+      username: ${TIMESCALEDB_USER}
+      password: ${TIMESCALEDB_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+
+logging:
+  level:
+    org.springframework.boot.docker.compose: WARN
+    com.github.dockerjava: WARN
