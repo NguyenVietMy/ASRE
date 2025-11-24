@@ -1,26 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-size: 16px;
+  --background: #0F0F10;
+  --foreground: #FFFFFF;
+  --card: #1A1B1E;
+  --card-foreground: #FFFFFF;
+  --popover: #1A1B1E;
+  --popover-foreground: #FFFFFF;
+  --primary: #5B78FF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2A2A2C;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2A2A2C;
+  --muted-foreground: #A1A1AA;
+  --accent: #B682FF;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #2A2A2C;
+  --input: #2A2A2C;
+  --ring: #5B78FF;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #5B78FF;
+  --chart-2: #B682FF;
+  --chart-3: #22D3EE;
+  --chart-4: #FB923C;
+  --chart-5: #F472B6;
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Custom utility classes for OpsPilot */
+.glass {
+  background: rgba(26, 27, 30, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-primary {
+  box-shadow: 0 0 30px rgba(91, 120, 255, 0.3);
+}
+
+.glow-accent {
+  box-shadow: 0 0 30px rgba(182, 130, 255, 0.3);
+}
+
+.grid-background {
+  background-image: 
+    linear-gradient(to right, rgba(42, 42, 44, 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 42, 44, 0.5) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, #5B78FF 0%, #B682FF 100%);
+}
+
+.gradient-dark {
+  background: linear-gradient(135deg, #0F0F10 0%, #1A1B1E 100%);
 }
