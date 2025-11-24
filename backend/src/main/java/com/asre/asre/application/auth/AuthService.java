@@ -1,19 +1,21 @@
 package com.asre.asre.application.auth;
 
+import com.asre.asre.domain.auth.AuthResult;
+import com.asre.asre.domain.auth.LoginCommand;
+import com.asre.asre.domain.auth.LogoutCommand;
+import com.asre.asre.domain.auth.RefreshCommand;
 import com.asre.asre.domain.auth.RefreshToken;
 import com.asre.asre.domain.auth.RefreshTokenRepository;
+import com.asre.asre.domain.auth.RegisterCommand;
 import com.asre.asre.domain.user.User;
 import com.asre.asre.domain.user.UserRepository;
 import com.asre.asre.infra.security.JwtUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -28,51 +30,51 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public AuthResult register(String email, String password, HttpServletResponse response) {
+    public AuthResult register(RegisterCommand command) {
         // Check if user already exists
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmail(command.getEmail()).isPresent()) {
             throw new RuntimeException("User with this email already exists");
         }
 
         // Create new user domain object
         User user = new User();
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setEmail(command.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         user.setRole(User.UserRole.MEMBER);
         user.setCreatedAt(Instant.now());
         user = userRepository.save(user);
 
         // Generate tokens
         String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
-        generateAndStoreRefreshToken(user.getId(), response);
+        String refreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
-        return new AuthResult(accessToken, user);
+        return new AuthResult(accessToken, refreshToken, user);
     }
 
     @Transactional
-    public AuthResult login(String email, String password, HttpServletResponse response) {
-        User user = userRepository.findByEmail(email)
+    public AuthResult login(LoginCommand command) {
+        User user = userRepository.findByEmail(command.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        if (!passwordEncoder.matches(command.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid email or password");
         }
 
         // Generate tokens
         String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
-        generateAndStoreRefreshToken(user.getId(), response);
+        String refreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
-        return new AuthResult(accessToken, user);
+        return new AuthResult(accessToken, refreshToken, user);
     }
 
     @Transactional
-    public AuthResult refresh(String refreshTokenCookie, HttpServletResponse response) {
-        if (refreshTokenCookie == null || refreshTokenCookie.isEmpty()) {
+    public AuthResult refresh(RefreshCommand command) {
+        if (command.getRefreshToken() == null || command.getRefreshToken().isEmpty()) {
             throw new RuntimeException("Refresh token is missing");
         }
 
         // Hash the token to look it up
-        String tokenHash = hashToken(refreshTokenCookie);
+        String tokenHash = hashToken(command.getRefreshToken());
         RefreshToken storedToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
@@ -91,30 +93,20 @@ public class AuthService {
 
         // Generate new tokens
         String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
-        generateAndStoreRefreshToken(user.getId(), response);
+        String newRefreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
-        return new AuthResult(newAccessToken, user);
+        return new AuthResult(newAccessToken, newRefreshToken, user);
     }
 
     @Transactional
-    public void logout(String refreshTokenCookie, HttpServletResponse response) {
-        if (refreshTokenCookie != null && !refreshTokenCookie.isEmpty()) {
-            String tokenHash = hashToken(refreshTokenCookie);
+    public void logout(LogoutCommand command) {
+        if (command.getRefreshToken() != null && !command.getRefreshToken().isEmpty()) {
+            String tokenHash = hashToken(command.getRefreshToken());
             refreshTokenRepository.deleteByTokenHash(tokenHash);
         }
-
-        // Clear refresh token cookie
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 
-    private void generateAndStoreRefreshToken(UUID userId, HttpServletResponse response) {
+    private String generateAndStoreRefreshTokenValue(UUID userId) {
         // Generate random token
         String refreshToken = jwtUtil.generateRefreshToken();
 
@@ -126,15 +118,7 @@ public class AuthService {
         storedToken.setExpiresAt(Instant.now().plus(jwtUtil.getRefreshTokenExpirationDays(), ChronoUnit.DAYS));
         refreshTokenRepository.save(storedToken);
 
-        // Set HttpOnly cookie
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true) // Set to true in production with HTTPS
-                .path("/")
-                .maxAge(Duration.ofDays(jwtUtil.getRefreshTokenExpirationDays()))
-                .sameSite("Strict")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+        return refreshToken;
     }
 
     private String hashToken(String token) {
@@ -155,10 +139,4 @@ public class AuthService {
         }
     }
 
-    // Result class for auth operations
-    @lombok.Value
-    public static class AuthResult {
-        String accessToken;
-        User user;
-    }
 }

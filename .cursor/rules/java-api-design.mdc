@@ -2,260 +2,147 @@
 alwaysApply: true
 ---
 
-# Java API Design (DDD Architecture Rule)
+# Clean DDD Enforcement Rule (Auth Module + Whole Project)
 
-You must generate all Java code following the Domain-Driven API structure below.  
-Do **not** expose JPA entities.  
-Do **not** mix persistence concerns into domain models.
+The login flow has been refactored to follow strict DDD boundaries. All future code must follow the exact same architectural rules.
 
-Your job is to always transform user requests into the following architecture:
+Cursor must apply this to all future generations AND fix any existing violations in files when requested.
+
+## 1. Layering Rules (Do NOT violate these)
+
+### Domain Layer (domain/)
+
+- Pure business logic only.
+- No Spring imports.
+- No HttpServletRequest/Response.
+- No annotations except Lombok.
+- No JPA or database annotations.
+- No DTOs or JSON annotations.
+- Domain may contain:
+  - Aggregates
+  - Value objects
+  - Domain events
+  - Repository interfaces
+  - Domain result objects (e.g., AuthResult)
+  - Domain commands (e.g., LoginCommand)
+
+### Application Layer (application/)
+
+- Contains use-case services.
+- Accepts only domain objects (commands, aggregates).
+- Returns only domain objects (results, aggregates).
+- Must NOT accept or return:
+  - DTOs
+  - JPA entities
+  - HttpServletRequest/Response
+  - Cookies
+  - JSON
+  - Servlet APIs
+
+Application services must be transport-agnostic and persistence-agnostic.
+
+### API Layer (api/)
+
+- Controllers, DTOs, HTTP-specific concerns.
+- Controller flow must ALWAYS be:
+  DTO → mapper → domain command → service → domain result → mapper → DTO.
+- Controllers handle cookies, headers, status codes.
+- DTOs never leak outside this layer.
+- No domain logic inside controllers.
+
+### Infra Layer (infra/)
+
+- Persistence implementations (JDBC or JPA).
+- Mappers converting Entity ↔ Domain.
+- External API clients.
+- Security utilities.
+- No domain logic.
+- No DTO logic.
+
+## 2. Auth Module Rules
+
+Cursor must enforce the following patterns:
+
+### Commands (Domain)
+
+- All incoming write operations must use domain-level command objects.
+  Example: LoginCommand, RegisterCommand, RefreshCommand.
+
+### Results (Domain)
+
+- All outcomes returned by services must be domain result objects.
+  Example: AuthResult.
+
+### Service Layer must NEVER use HttpServletResponse/Request
+
+- Cookie setting and all HTTP concerns belong in the controller only.
+
+### Service Layer must NEVER take primitives from controllers
+
+- Controllers must convert DTO → Domain before calling service.
+
+### Service Layer must NEVER return DTOs
+
+- Must return domain results only.
+
+### Controller must set refresh token cookie (not the service)
+
+### Service must only generate refresh token VALUE.
+
+- Controller writes it to cookie.
+- Service must not modify HTTP headers.
+
+## 3. Persistence Rules
+
+- Domain repositories define interfaces only.
+- Infra repositories implement them via JDBC or JPA.
+- Entities must never leak into domain or application layer.
+- Mappers must be used for:
+  - DTO ↔ Domain (API layer)
+  - Entity ↔ Domain (Infra layer)
+
+## 4. Fix ALL existing Auth flows
+
+Cursor must refactor:
+
+- register()
+- refresh()
+- logout()
+
+to follow the same pattern as the clean login flow.
+
+Changes required:
+
+- Extract domain-level commands where appropriate.
+- Services must accept only domain objects or primitives if domain says so.
+- Services must return AuthResult or domain equivalents.
+- All cookie writing must move into controllers.
+- Service must generate refresh token but not set cookies.
+- Ensure mappers are created where needed.
+
+## 5. Future Code Generation Rules
+
+Cursor must NOT generate:
+
+- @Entity or JPA annotations in domain.
+- DTOs in domain or application layers.
+- HttpServletResponse/Request in services.
+- Services accepting request DTOs.
+- Services returning DTOs.
+- Controllers passing primitives directly into services.
+- Controllers returning domain objects to HTTP layer.
+
+Cursor must ALWAYS generate:
+
+- Pure domain commands and results.
+- Domain → API → Domain mapping layers.
+- Transport-agnostic application services.
+- Proper repository interfaces in domain.
+- Proper repository implementations in infra.
+- Correct folder structure per layer.
+
+## 6. Safety rule
+
+If Cursor detects any ambiguity (domain missing, unclear boundaries), it must ask for clarification before generating code.
 
 ---
-
-# 1. DOMAIN LAYER (Pure Business Model)
-
-Create **pure domain objects** with:
-
-- No `@Entity`, no JPA annotations
-- Business invariants
-- Behavior methods (not just getters/setters)
-
-## Example Structure
-
-```java
-package com.example.domain.campaign;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-public class Campaign {
-
-    private UUID id;
-    private UUID orgId;
-    private Long createdBy;
-    private String name;
-    private String description;
-    private CampaignStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public enum CampaignStatus { ACTIVE, PAUSED, COMPLETED, INACTIVE }
-
-    // Behavior
-    public void pause() {
-        if (status == CampaignStatus.ACTIVE) {
-            status = CampaignStatus.PAUSED;
-        }
-    }
-
-    public void complete() {
-        status = CampaignStatus.COMPLETED;
-    }
-
-    // Constructors + getters/setters as needed
-}
-Domain ≠ Persistence.
-
-2. PERSISTENCE LAYER (JPA Entity Representation Only)
-Entities must only store data, never business logic.
-
-java
-Copy code
-package com.example.infra.jpa.campaign;
-
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-@Entity
-@Table(name = "campaigns")
-public class CampaignEntity {
-
-    @Id
-    private UUID id;
-    private UUID orgId;
-    private Long createdBy;
-    private String name;
-    private String description;
-
-    @Enumerated(EnumType.STRING)
-    private CampaignStatus status;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-}
-3. MAPPER (Transforms Entity ↔ Domain)
-Always create a mapper layer to decouple JPA from domain logic.
-
-java
-Copy code
-package com.example.infra.jpa.campaign;
-
-import org.springframework.stereotype.Component;
-import com.example.domain.campaign.Campaign;
-
-@Component
-public class CampaignEntityMapper {
-
-    public CampaignEntity toEntity(Campaign domain) {
-        CampaignEntity entity = new CampaignEntity();
-        entity.setId(domain.getId());
-        entity.setOrgId(domain.getOrgId());
-        entity.setCreatedBy(domain.getCreatedBy());
-        entity.setName(domain.getName());
-        entity.setDescription(domain.getDescription());
-        entity.setStatus(domain.getStatus());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
-        return entity;
-    }
-
-    public Campaign toDomain(CampaignEntity entity) {
-        Campaign domain = new Campaign();
-        domain.setId(entity.getId());
-        domain.setOrgId(entity.getOrgId());
-        domain.setCreatedBy(entity.getCreatedBy());
-        domain.setName(entity.getName());
-        domain.setDescription(entity.getDescription());
-        domain.setStatus(entity.getStatus());
-        domain.setCreatedAt(entity.getCreatedAt());
-        domain.setUpdatedAt(entity.getUpdatedAt());
-        return domain;
-    }
-}
-4. REPOSITORY INTERFACE (Domain-Driven)
-Define it in domain layer, not tied to JPA.
-
-java
-Copy code
-package com.example.domain.campaign;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-public interface CampaignRepository {
-    Campaign save(Campaign campaign);
-    Optional<Campaign> findById(UUID id);
-    List<Campaign> findAllByOrgId(UUID orgId);
-}
-5. JPA IMPLEMENTATION (infra layer)
-java
-Copy code
-package com.example.infra.jpa.campaign;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-import com.example.domain.campaign.*;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-@Repository
-@RequiredArgsConstructor
-public class JpaCampaignRepository implements CampaignRepository {
-
-    private final SpringDataCampaignRepository jpaRepo;
-    private final CampaignEntityMapper mapper;
-
-    @Override
-    public Campaign save(Campaign campaign) {
-        CampaignEntity entity = mapper.toEntity(campaign);
-        return mapper.toDomain(jpaRepo.save(entity));
-    }
-
-    @Override
-    public Optional<Campaign> findById(UUID id) {
-        return jpaRepo.findById(id)
-                .map(mapper::toDomain);
-    }
-
-    @Override
-    public List<Campaign> findAllByOrgId(UUID orgId) {
-        return jpaRepo.findAllByOrgId(orgId)
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
-    }
-}
-6. APPLICATION SERVICES (Use Cases)
-Contains orchestration logic only — not HTTP, not JPA.
-
-java
-Copy code
-package com.example.application.campaign;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import com.example.domain.campaign.*;
-
-import java.util.UUID;
-
-@Service
-@RequiredArgsConstructor
-public class CampaignService {
-
-    private final CampaignRepository campaignRepository;
-
-    public Campaign createCampaign(Campaign newCampaign) {
-        newCampaign.setStatus(Campaign.CampaignStatus.ACTIVE);
-        return campaignRepository.save(newCampaign);
-    }
-
-    public Campaign pauseCampaign(UUID id) {
-        Campaign campaign = campaignRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Campaign not found"));
-        campaign.pause();
-        return campaignRepository.save(campaign);
-    }
-}
-7. PRESENTATION LAYER (Controllers + DTOs)
-java
-Copy code
-package com.example.api.campaign;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-import com.example.application.campaign.CampaignService;
-import com.example.domain.campaign.Campaign;
-
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/api/v1/campaigns")
-public class CampaignController {
-
-    private final CampaignService service;
-    private final CampaignDtoMapper mapper;
-
-    @PostMapping
-    public CampaignResponse create(@RequestBody CreateCampaignRequest request) {
-        Campaign domain = mapper.toDomain(request);
-        Campaign saved = service.createCampaign(domain);
-        return mapper.toResponse(saved);
-    }
-}
-RULE SUMMARY
-You must always structure code like this when generating Java backend:
-
-Domain model
-pure class, fields + behavior
-
-Entity
-JPA only
-
-Mapper
-Domain ↔ Entity
-
-Repository interface
-declared in domain
-
-Repository implementation
-lives in infra
-
-Service
-coordinates domain logic
-
-Controller + DTOs
-presentation layer only
-```
