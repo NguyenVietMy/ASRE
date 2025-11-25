@@ -73,7 +73,7 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, subtitle, children }: MetricCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-all">
+    <div className="bg-[#0A0A0A] border border-border rounded-lg p-6 hover:border-primary/50 transition-all">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-foreground">{title}</h3>
         <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -292,7 +292,7 @@ export default function MetricsPage() {
             </div>
 
             {/* Upgrade Banner */}
-            <div className="mb-6 p-4 bg-card border border-border rounded-lg flex items-center justify-between">
+            <div className="mb-6 p-4 bg-[#0A0A0A] border border-border rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-primary" />
                 <p className="text-sm text-foreground">
@@ -306,7 +306,7 @@ export default function MetricsPage() {
             </div>
 
             {/* Metrics Grid */}
-            <div className="bg-card border border-border rounded-lg p-6 mb-6">
+            <div className="bg-[#0A0A0A] border border-border rounded-lg p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Edge Requests */}
                 <MetricCard title="Edge Requests" value="Invocations 70">
