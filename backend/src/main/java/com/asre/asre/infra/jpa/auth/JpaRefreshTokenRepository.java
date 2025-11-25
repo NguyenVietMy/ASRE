@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,8 +29,10 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
         entity.setId((UUID) rs.getObject("id"));
         entity.setUserId((UUID) rs.getObject("user_id"));
         entity.setTokenHash(rs.getString("token_hash"));
-        entity.setExpiresAt(rs.getTimestamp("expires_at").toInstant());
-        entity.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+        Timestamp expiresAt = rs.getTimestamp("expires_at");
+        entity.setExpiresAt(expiresAt != null ? expiresAt.toInstant() : null);
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        entity.setCreatedAt(createdAt != null ? createdAt.toInstant() : null);
         return entity;
     };
 
@@ -38,11 +41,13 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
         RefreshTokenEntity entity = mapper.toEntity(token);
         if (entity.getId() == null) {
             UUID id = UUID.randomUUID();
+            Instant now = Instant.now();
             String sql = "INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)";
-            jdbcTemplate.update(sql, id, entity.getUserId(), entity.getTokenHash(), entity.getExpiresAt(),
-                    Instant.now());
+            jdbcTemplate.update(sql, id, entity.getUserId(), entity.getTokenHash(),
+                    entity.getExpiresAt() != null ? Timestamp.from(entity.getExpiresAt()) : null,
+                    Timestamp.from(now));
             entity.setId(id);
-            entity.setCreatedAt(Instant.now());
+            entity.setCreatedAt(now);
         }
         return mapper.toDomain(entity);
     }
@@ -73,6 +78,6 @@ public class JpaRefreshTokenRepository implements RefreshTokenRepository {
     @Override
     public void deleteExpiredTokens() {
         String sql = "DELETE FROM refresh_tokens WHERE expires_at < ?";
-        jdbcTemplate.update(sql, Instant.now());
+        jdbcTemplate.update(sql, Timestamp.from(Instant.now()));
     }
 }

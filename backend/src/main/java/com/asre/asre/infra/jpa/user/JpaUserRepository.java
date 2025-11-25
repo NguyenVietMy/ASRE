@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,7 +30,8 @@ public class JpaUserRepository implements UserRepository {
         entity.setEmail(rs.getString("email"));
         entity.setPasswordHash(rs.getString("password_hash"));
         entity.setRole(rs.getString("role"));
-        entity.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        entity.setCreatedAt(createdAt != null ? createdAt.toInstant() : null);
         return entity;
     };
 
@@ -39,14 +41,19 @@ public class JpaUserRepository implements UserRepository {
         if (entity.getId() == null) {
             // Insert new user
             UUID id = UUID.randomUUID();
-            String sql = "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)";
-            jdbcTemplate.update(sql, id, entity.getEmail(), entity.getPasswordHash(), entity.getRole(), Instant.now());
+            Instant now = Instant.now();
+            // Cast role string to user_role enum type (database enum expects lowercase)
+            String roleValue = entity.getRole() != null ? entity.getRole().toLowerCase() : "member";
+            String sql = "INSERT INTO users (id, email, password_hash, role, created_at) VALUES (?, ?, ?, ?::user_role, ?)";
+            jdbcTemplate.update(sql, id, entity.getEmail(), entity.getPasswordHash(), roleValue,
+                    Timestamp.from(now));
             entity.setId(id);
-            entity.setCreatedAt(Instant.now());
+            entity.setCreatedAt(now);
         } else {
             // Update existing user
-            String sql = "UPDATE users SET email = ?, password_hash = ?, role = ? WHERE id = ?";
-            jdbcTemplate.update(sql, entity.getEmail(), entity.getPasswordHash(), entity.getRole(), entity.getId());
+            String roleValue = entity.getRole() != null ? entity.getRole().toLowerCase() : "member";
+            String sql = "UPDATE users SET email = ?, password_hash = ?, role = ?::user_role WHERE id = ?";
+            jdbcTemplate.update(sql, entity.getEmail(), entity.getPasswordHash(), roleValue, entity.getId());
         }
         return mapper.toDomain(entity);
     }

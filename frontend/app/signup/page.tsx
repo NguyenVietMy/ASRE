@@ -5,22 +5,33 @@ import { Button } from "@/components/Button";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await signIn({ email, password });
+      await signUp({ email, password });
     } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials.");
+      setError(err.message || "Registration failed. Please try again.");
       setLoading(false);
     }
   };
@@ -40,14 +51,12 @@ export default function SignInPage() {
           <span className="text-2xl font-semibold">OpsPilot</span>
         </div>
 
-        {/* Sign In Card */}
+        {/* Sign Up Card */}
         <div className="glass rounded-2xl p-8 border border-border shadow-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold mb-2">
-              Sign in to your account
-            </h1>
+            <h1 className="text-3xl font-semibold mb-2">Create your account</h1>
             <p className="text-muted-foreground">
-              Enter your credentials to access your dashboard
+              Get started with OpsPilot today
             </p>
           </div>
 
@@ -86,31 +95,32 @@ export default function SignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
                 className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                 placeholder="••••••••"
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Must be at least 8 characters
+              </p>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-border bg-secondary text-primary focus:ring-2 focus:ring-primary"
-                />
-                <label
-                  htmlFor="remember"
-                  className="ml-2 text-sm text-muted-foreground"
-                >
-                  Remember me
-                </label>
-              </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-primary hover:text-primary/80 transition-colors"
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium mb-2"
               >
-                Forgot password?
-              </Link>
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                placeholder="••••••••"
+              />
             </div>
 
             <Button
@@ -119,18 +129,18 @@ export default function SignInPage() {
               type="submit"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              Already have an account?{" "}
               <Link
-                href="/signup"
+                href="/signin"
                 className="text-primary hover:text-primary/80 transition-colors font-medium"
               >
-                Sign up
+                Sign in
               </Link>
             </p>
           </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,7 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "OpsPilot - AI-Assisted Incident & Performance Platform",
-  description: "Ingest logs and metrics. Detect anomalies. Resolve incidents faster with an AI copilot.",
+  description:
+    "Ingest logs and metrics. Detect anomalies. Resolve incidents faster with an AI copilot.",
 };
 
 export default function RootLayout({
@@ -20,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ package com.asre.asre.config;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,16 +17,32 @@ public class DatabaseConfig {
     // Primary datasource: Supabase (metadata)
     @Primary
     @Bean(name = "supabaseDataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.primary")
-    public DataSource supabaseDataSource() {
-        return DataSourceBuilder.create().build();
+    public DataSource supabaseDataSource(
+            @Value("${spring.datasource.primary.url}") String url,
+            @Value("${spring.datasource.primary.username}") String username,
+            @Value("${spring.datasource.primary.password}") String password,
+            @Value("${spring.datasource.primary.driver-class-name}") String driverClassName) {
+        return DataSourceBuilder.create()
+                .url(url)
+                .username(username)
+                .password(password)
+                .driverClassName(driverClassName)
+                .build();
     }
 
     // Secondary datasource: TimescaleDB (time-series)
     @Bean(name = "timescaledbDataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.timescaledb")
-    public DataSource timescaledbDataSource() {
-        return DataSourceBuilder.create().build();
+    public DataSource timescaledbDataSource(
+            @Value("${spring.datasource.timescaledb.url}") String url,
+            @Value("${spring.datasource.timescaledb.username}") String username,
+            @Value("${spring.datasource.timescaledb.password}") String password,
+            @Value("${spring.datasource.timescaledb.driver-class-name}") String driverClassName) {
+        return DataSourceBuilder.create()
+                .url(url)
+                .username(username)
+                .password(password)
+                .driverClassName(driverClassName)
+                .build();
     }
 
     // Primary Flyway: Supabase migrations

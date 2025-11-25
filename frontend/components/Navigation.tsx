@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Menu, X } from 'lucide-react';
-import { Button } from './Button';
+import React from "react";
+import { Menu, X } from "lucide-react";
+import { Button } from "./Button";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
@@ -21,39 +24,117 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <a
+              href="#features"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#docs"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Docs
+            </a>
+            <a
+              href="#pricing"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Pricing
+            </a>
           </div>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="/signin" className="text-muted-foreground hover:text-foreground transition-colors">
-              Sign In
-            </a>
-            <Button variant="primary">Get Started</Button>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={signOut}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <a
+                  href="/signin"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sign In
+                </a>
+                <Button variant="primary">Get Started</Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             className="md:hidden text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 flex flex-col gap-4">
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <a
+              href="#features"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#docs"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Docs
+            </a>
+            <a
+              href="#pricing"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Pricing
+            </a>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              <a href="/signin" className="text-left text-muted-foreground hover:text-foreground transition-colors">
-                Sign In
-              </a>
-              <Button variant="primary">Get Started</Button>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-left text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="text-left text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a
+                    href="/signin"
+                    className="text-left text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Sign In
+                  </a>
+                  <Button variant="primary">Get Started</Button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -61,4 +142,3 @@ export function Navigation() {
     </nav>
   );
 }
-

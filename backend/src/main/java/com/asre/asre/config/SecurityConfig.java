@@ -45,6 +45,16 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Suppress UserDetailsServiceAutoConfiguration warning
+    // Since we use JWT authentication, we don't need a UserDetailsService
+    // This empty bean prevents Spring from auto-generating one
+    @Bean
+    public org.springframework.security.core.userdetails.UserDetailsService userDetailsService() {
+        return username -> {
+            throw new UnsupportedOperationException("UserDetailsService not used - JWT authentication only");
+        };
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
