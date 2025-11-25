@@ -21,7 +21,10 @@ export function AppNavigation() {
   const { user } = useAuth();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 border-b border-border"
+      style={{ backgroundColor: "#0A0A0A" }}
+    >
       {/* Top Bar */}
       <div>
         <div className="max-w-[1920px] mx-auto px-6 h-16 flex items-center justify-between">
