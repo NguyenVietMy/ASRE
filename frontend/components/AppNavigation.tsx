@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,29 +77,105 @@ export function AppNavigation() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="max-w-[1920px] mx-auto px-6 -mt-1">
-        <div className="flex items-center gap-1 overflow-x-auto">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname?.startsWith(item.href + "/");
+      <div className="max-w-[1920px] mx-auto px-6 -mt-1 relative">
+        <div className="flex items-center gap-1 overflow-x-auto relative">
+          {/* Sliding hover background */}
+          <div
+            id="sliding-bg"
+            className="absolute top-0 bg-secondary rounded transition-all duration-300 ease-out pointer-events-none opacity-0"
+            style={{
+              width: "0px",
+              left: "0px",
+              top: "0.2rem",
+              bottom: "0.35rem",
+            }}
+          />
+          {navItems.map((item, index) => {
+            // More precise active state: exact match or starts with href + "/" but exclude parent routes when on child routes
+            let isActive = false;
+            if (pathname === item.href || pathname === item.href + "/") {
+              isActive = true;
+            } else if (pathname?.startsWith(item.href + "/")) {
+              // Only match if this is the most specific route
+              // For /dashboard, don't match if we're on a more specific route like /dashboard/metrics
+              if (item.href === "/dashboard") {
+                // Check if pathname matches any other nav item (more specific)
+                const isMoreSpecificRoute = navItems
+                  .filter((other) => other.href !== item.href)
+                  .some((other) => pathname?.startsWith(other.href));
+                isActive = !isMoreSpecificRoute;
+              } else {
+                // For other routes, allow sub-routes
+                isActive = true;
+              }
+            }
+            const linkRef = useRef<HTMLAnchorElement>(null);
+
             return (
-              <Link
+              <div
                 key={item.href}
-                href={item.href}
-                className={`
-                  relative px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap rounded
-                  ${
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }
-                `}
+                className="relative"
+                style={{ paddingBottom: "0.1rem" }}
               >
-                {item.name}
+                <Link
+                  ref={linkRef}
+                  href={item.href}
+                  className="relative z-10"
+                  onMouseEnter={(e) => {
+                    const bg = document.getElementById("sliding-bg");
+                    if (bg && linkRef.current) {
+                      const rect = linkRef.current.getBoundingClientRect();
+                      const container =
+                        linkRef.current.parentElement?.parentElement;
+                      if (container) {
+                        const containerRect = container.getBoundingClientRect();
+                        bg.style.width = `${rect.width}px`;
+                        bg.style.left = `${rect.left - containerRect.left}px`;
+                        bg.style.opacity = "1";
+                      }
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    const bg = document.getElementById("sliding-bg");
+                    if (bg) {
+                      bg.style.opacity = "0";
+                    }
+                  }}
+                >
+                  <span
+                    className={`
+                    block px-4 pt-3 pb-3 text-sm font-medium transition-colors whitespace-nowrap rounded
+                    ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }
+                  `}
+                    style={
+                      !isActive
+                        ? {
+                            marginBottom: "0.1rem",
+                          }
+                        : {
+                            marginBottom: "0.1rem",
+                          }
+                    }
+                  >
+                    {item.name}
+                  </span>
+                </Link>
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground"></span>
+                  <span
+                    className="absolute bg-white z-30"
+                    style={{
+                      bottom: "0",
+                      left: "0",
+                      right: "0",
+                      height: "2px",
+                    }}
+                  ></span>
                 )}
-              </Link>
+              </div>
             );
           })}
         </div>
