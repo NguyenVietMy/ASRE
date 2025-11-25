@@ -184,7 +184,11 @@ export default function MetricsPage() {
                     stroke="#A1A1AA"
                     fontSize={10}
                     tick={{ fill: "#A1A1AA" }}
-                    label={{ value: "KB", position: "insideLeft", fill: "#A1A1AA" }}
+                    label={{
+                      value: "KB",
+                      position: "insideLeft",
+                      fill: "#A1A1AA",
+                    }}
                   />
                   <Tooltip
                     contentStyle={{
@@ -246,4 +250,3 @@ export default function MetricsPage() {
     </div>
   );
 }
-
