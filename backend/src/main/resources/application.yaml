@@ -37,3 +37,56 @@ jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-minimum-32-characters}
   access-token-expiration-minutes: 15
   refresh-token-expiration-days: 30
+
+# RabbitMQ Configuration
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:admin}
+    password: ${RABBITMQ_PASSWORD:admin}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 100
+
+# Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+# Actuator Configuration (Prometheus metrics)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
+
+# OpenSearch Configuration
+opensearch:
+  host: ${OPENSEARCH_HOST:localhost}
+  port: ${OPENSEARCH_PORT:9200}
+  scheme: ${OPENSEARCH_SCHEME:http}
+  index:
+    name: opensearch-logs
+
+# API Key Cache Configuration
+api:
+  key:
+    cache:
+      ttl-seconds: 300  # 5 minutes cache for API key lookups
+
+# Ingestion Worker Configuration
+ingestion:
+  batch:
+    size: 100
+    timeout-seconds: 1
