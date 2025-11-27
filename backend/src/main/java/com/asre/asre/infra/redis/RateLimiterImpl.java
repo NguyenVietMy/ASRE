@@ -1,7 +1,6 @@
 package com.asre.asre.infra.redis;
 
 import com.asre.asre.application.ratelimit.RateLimiter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -14,7 +13,6 @@ import java.util.List;
  * Redis-based rate limiter using sliding window algorithm.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RateLimiterImpl implements RateLimiter {
 
