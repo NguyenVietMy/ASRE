@@ -1,5 +1,6 @@
 package com.asre.asre.application.ingestion;
 
+import com.asre.asre.application.service.ServiceDiscoveryService;
 import com.asre.asre.domain.ingestion.LogEntry;
 import com.asre.asre.domain.ingestion.LogIndexer;
 import com.asre.asre.domain.ingestion.LogMetadata;
@@ -23,6 +24,7 @@ public class LogIngestionService {
     private final LogMetadataRepository logMetadataRepository;
     private final LogIndexer logIndexer;
     private final MetricsCollector metricsCollector;
+    private final ServiceDiscoveryService serviceDiscoveryService;
 
     @Transactional
     public void ingestBatch(List<LogEntry> logEntries) {
@@ -42,6 +44,25 @@ public class LogIngestionService {
                 log.warn("Filtered out {} invalid logs from batch of {}",
                         logEntries.size() - validLogs.size(), logEntries.size());
             }
+
+            // Auto-discover services from logs
+            validLogs.stream()
+                    .collect(Collectors.groupingBy(LogEntry::getServiceId))
+                    .forEach((serviceId, logs) -> {
+                        if (serviceId != null && !logs.isEmpty()) {
+                            // Use serviceId as name if not found (temporary - can be improved later)
+                            String serviceName = "service-" + serviceId.toString().substring(0, 8);
+                            try {
+                                serviceDiscoveryService.discoverService(
+                                        logs.get(0).getProjectId(),
+                                        serviceId,
+                                        serviceName
+                                );
+                            } catch (Exception e) {
+                                log.warn("Failed to discover service {}: {}", serviceId, e.getMessage());
+                            }
+                        }
+                    });
 
             // Write to OpenSearch and create metadata
             List<LogMetadata> metadataList = validLogs.stream()
