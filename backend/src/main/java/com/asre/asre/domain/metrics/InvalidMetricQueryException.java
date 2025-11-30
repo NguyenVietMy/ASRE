@@ -1,0 +1,15 @@
+package com.asre.asre.domain.metrics;
+
+/**
+ * Domain exception thrown when a metric query is invalid.
+ */
+public class InvalidMetricQueryException extends RuntimeException {
+    public InvalidMetricQueryException(String message) {
+        super(message);
+    }
+
+    public InvalidMetricQueryException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
