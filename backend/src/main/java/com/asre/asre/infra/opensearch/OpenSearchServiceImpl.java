@@ -35,8 +35,9 @@ public class OpenSearchServiceImpl implements LogIndexer {
         document.put("service_id", logEntry.getServiceId().toString());
         document.put("timestamp", logEntry.getTimestamp().toString());
         document.put("ingested_at", Instant.now().toString());
-        document.put("level", logEntry.getLevel());
+        document.put("level", logEntry.getLevel().name()); // Convert enum to string
         document.put("message", logEntry.getMessage());
+        document.put("sampled", logEntry.isSampled()); // Store sampling flag
         if (logEntry.getTraceId() != null) {
             document.put("trace_id", logEntry.getTraceId());
         }
@@ -71,8 +72,9 @@ public class OpenSearchServiceImpl implements LogIndexer {
             document.put("service_id", logEntry.getServiceId().toString());
             document.put("timestamp", logEntry.getTimestamp().toString());
             document.put("ingested_at", Instant.now().toString());
-            document.put("level", logEntry.getLevel());
+            document.put("level", logEntry.getLevel().name()); // Convert enum to string
             document.put("message", logEntry.getMessage());
+            document.put("sampled", logEntry.isSampled()); // Store sampling flag
             if (logEntry.getTraceId() != null) {
                 document.put("trace_id", logEntry.getTraceId());
             }

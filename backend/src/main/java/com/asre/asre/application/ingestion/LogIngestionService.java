@@ -1,11 +1,13 @@
 package com.asre.asre.application.ingestion;
 
+import com.asre.asre.application.logs.LogSamplingService;
 import com.asre.asre.application.service.ServiceDiscoveryService;
 import com.asre.asre.domain.ingestion.LogEntry;
 import com.asre.asre.domain.ingestion.LogIndexer;
 import com.asre.asre.domain.ingestion.LogMetadata;
 import com.asre.asre.domain.ingestion.LogMetadataRepository;
 import com.asre.asre.domain.ingestion.MetricsCollector;
+import com.asre.asre.domain.logs.LogId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class LogIngestionService {
     private final LogIndexer logIndexer;
     private final MetricsCollector metricsCollector;
     private final ServiceDiscoveryService serviceDiscoveryService;
+    private final LogSamplingService samplingService;
 
     @Transactional
     public void ingestBatch(List<LogEntry> logEntries) {
@@ -45,6 +48,12 @@ public class LogIngestionService {
                         logEntries.size() - validLogs.size(), logEntries.size());
             }
 
+            if (validLogs.isEmpty()) {
+                return;
+            }
+
+            UUID projectId = validLogs.get(0).getProjectId();
+
             // Auto-discover services from logs
             validLogs.stream()
                     .collect(Collectors.groupingBy(LogEntry::getServiceId))
@@ -64,27 +73,41 @@ public class LogIngestionService {
                         }
                     });
 
+            // Apply sampling policy (domain rule enforcement)
+            List<LogEntry> sampledLogs = samplingService.applySampling(validLogs, projectId);
+            
+            if (sampledLogs.isEmpty()) {
+                log.debug("All logs filtered out by sampling policy");
+                return;
+            }
+
             // Write to OpenSearch and create metadata
-            List<LogMetadata> metadataList = validLogs.stream()
+            List<LogMetadata> metadataList = sampledLogs.stream()
                     .map(log -> {
-                        String logId = UUID.randomUUID().toString();
+                        // Set LogId if not already set
+                        LogId logId = log.getLogId() != null 
+                                ? log.getLogId() 
+                                : log.getOrCreateLogId();
+                        log.setLogId(logId);
+                        
                         // Write to search engine (OpenSearch)
-                        logIndexer.indexLog(log, logId);
+                        logIndexer.indexLog(log, logId.getValue());
+                        
                         // Create metadata
                         return new LogMetadata(
                                 log.getProjectId(),
                                 log.getServiceId(),
-                                logId,
+                                logId.getValue(),
                                 log.getTimestamp(),
                                 Instant.now(), // ingested_at
-                                log.getLevel());
+                                log.getLevel().name()); // Convert enum to string for storage
                     })
                     .collect(Collectors.toList());
 
             // Save metadata to PostgreSQL
             logMetadataRepository.saveBatch(metadataList);
-            metricsCollector.recordLogsIngested(validLogs.size());
-            log.debug("Ingested {} logs", validLogs.size());
+            metricsCollector.recordLogsIngested(sampledLogs.size());
+            log.debug("Ingested {} logs ({} after sampling)", sampledLogs.size(), validLogs.size());
         } catch (Exception e) {
             metricsCollector.recordLogsIngestionError();
             throw e;

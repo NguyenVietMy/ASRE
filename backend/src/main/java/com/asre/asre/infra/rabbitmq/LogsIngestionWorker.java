@@ -2,6 +2,8 @@ package com.asre.asre.infra.rabbitmq;
 
 import com.asre.asre.application.ingestion.LogIngestionService;
 import com.asre.asre.domain.ingestion.LogEntry;
+import com.asre.asre.domain.logs.LogId;
+import com.asre.asre.domain.logs.LogLevel;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -102,20 +104,29 @@ public class LogsIngestionWorker {
 
     private LogEntry parseLogEntry(Map<String, Object> payload) {
         try {
-            LogEntry logEntry = new LogEntry();
-            logEntry.setProjectId(UUID.fromString((String) payload.get("project_id")));
-            logEntry.setServiceId(UUID.fromString((String) payload.get("service_id")));
-            logEntry.setLevel((String) payload.get("level"));
-            logEntry.setMessage((String) payload.get("message"));
-            
+            UUID projectId = UUID.fromString((String) payload.get("project_id"));
+            UUID serviceId = UUID.fromString((String) payload.get("service_id"));
+            LogLevel level = LogLevel.fromString((String) payload.get("level"));
+            String message = (String) payload.get("message");
             String timestampStr = (String) payload.get("timestamp");
-            logEntry.setTimestamp(Instant.parse(timestampStr));
-
-            logEntry.setTraceId((String) payload.get("trace_id"));
+            Instant timestamp = Instant.parse(timestampStr);
+            String traceId = (String) payload.get("trace_id");
 
             @SuppressWarnings("unchecked")
             Map<String, Object> context = (Map<String, Object>) payload.get("context");
-            logEntry.setContext(context);
+
+            // Create LogEntry with LogLevel enum
+            LogEntry logEntry = new LogEntry(
+                    null, // LogId will be set during ingestion
+                    projectId,
+                    serviceId,
+                    level,
+                    message,
+                    timestamp,
+                    traceId,
+                    context,
+                    false // sampled flag set during ingestion
+            );
 
             return logEntry;
         } catch (Exception e) {
