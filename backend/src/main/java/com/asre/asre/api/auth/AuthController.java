@@ -6,7 +6,7 @@ import com.asre.asre.domain.auth.LoginCommand;
 import com.asre.asre.domain.auth.LogoutCommand;
 import com.asre.asre.domain.auth.RefreshCommand;
 import com.asre.asre.domain.auth.RegisterCommand;
-import com.asre.asre.infra.security.JwtUtil;
+import com.asre.asre.domain.auth.TokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthDtoMapper mapper;
-    private final JwtUtil jwtUtil;
+    private final TokenService tokenService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request,
@@ -70,7 +70,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true) // Set to true in production with HTTPS
                 .path("/")
-                .maxAge(Duration.ofDays(jwtUtil.getRefreshTokenExpirationDays()))
+                .maxAge(Duration.ofDays(tokenService.getRefreshTokenExpirationDays()))
                 .sameSite("Strict")
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
