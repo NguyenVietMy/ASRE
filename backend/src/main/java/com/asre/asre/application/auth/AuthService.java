@@ -7,9 +7,9 @@ import com.asre.asre.domain.auth.RefreshCommand;
 import com.asre.asre.domain.auth.RefreshToken;
 import com.asre.asre.domain.auth.RefreshTokenRepository;
 import com.asre.asre.domain.auth.RegisterCommand;
+import com.asre.asre.domain.auth.TokenService;
 import com.asre.asre.domain.user.User;
 import com.asre.asre.domain.user.UserRepository;
-import com.asre.asre.infra.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtUtil jwtUtil;
+    private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -45,7 +45,7 @@ public class AuthService {
         user = userRepository.save(user);
 
         // Generate tokens
-        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String accessToken = tokenService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
         String refreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
         return new AuthResult(accessToken, refreshToken, user);
@@ -61,7 +61,7 @@ public class AuthService {
         }
 
         // Generate tokens
-        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String accessToken = tokenService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
         String refreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
         return new AuthResult(accessToken, refreshToken, user);
@@ -92,7 +92,7 @@ public class AuthService {
         refreshTokenRepository.deleteByTokenHash(tokenHash);
 
         // Generate new tokens
-        String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String newAccessToken = tokenService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
         String newRefreshToken = generateAndStoreRefreshTokenValue(user.getId());
 
         return new AuthResult(newAccessToken, newRefreshToken, user);
@@ -108,14 +108,14 @@ public class AuthService {
 
     private String generateAndStoreRefreshTokenValue(UUID userId) {
         // Generate random token
-        String refreshToken = jwtUtil.generateRefreshToken();
+        String refreshToken = tokenService.generateRefreshToken();
 
         // Hash and store
         String tokenHash = hashToken(refreshToken);
         RefreshToken storedToken = new RefreshToken();
         storedToken.setUserId(userId);
         storedToken.setTokenHash(tokenHash);
-        storedToken.setExpiresAt(Instant.now().plus(jwtUtil.getRefreshTokenExpirationDays(), ChronoUnit.DAYS));
+        storedToken.setExpiresAt(Instant.now().plus(tokenService.getRefreshTokenExpirationDays(), ChronoUnit.DAYS));
         refreshTokenRepository.save(storedToken);
 
         return refreshToken;
