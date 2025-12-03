@@ -19,6 +19,7 @@ public class RabbitMQConfig {
     public static final String METRICS_DLQ = "metrics.dlq";
     public static final String LOGS_DLQ = "logs.dlq";
     public static final String ALERTS_EVALUATE_QUEUE = "alerts.evaluate";
+    public static final String NOTIFICATIONS_QUEUE = "notifications.send";
 
     @Bean
     public Queue metricsIngestQueue() {
@@ -43,6 +44,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue alertsEvaluateQueue() {
         return QueueBuilder.durable(ALERTS_EVALUATE_QUEUE).build();
+    }
+
+    @Bean
+    public Queue notificationsQueue() {
+        return QueueBuilder.durable(NOTIFICATIONS_QUEUE).build();
     }
 
     @Bean
