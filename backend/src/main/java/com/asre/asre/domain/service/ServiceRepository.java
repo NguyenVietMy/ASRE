@@ -1,5 +1,6 @@
 package com.asre.asre.domain.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,5 +28,9 @@ public interface ServiceRepository {
      * Check if a service exists for the given project and name.
      */
     boolean existsByProjectIdAndName(UUID projectId, String name);
-}
 
+    /**
+     * Find all services for a project.
+     */
+    List<Service> findByProjectId(UUID projectId);
+}
