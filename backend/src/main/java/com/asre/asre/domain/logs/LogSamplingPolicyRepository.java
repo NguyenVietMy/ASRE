@@ -1,6 +1,5 @@
 package com.asre.asre.domain.logs;
 
-import java.util.Optional;
 import java.util.UUID;
 
 /**

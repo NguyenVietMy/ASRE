@@ -2,7 +2,6 @@ package com.asre.asre.infra.rabbitmq;
 
 import com.asre.asre.application.ingestion.LogIngestionService;
 import com.asre.asre.domain.ingestion.LogEntry;
-import com.asre.asre.domain.logs.LogId;
 import com.asre.asre.domain.logs.LogLevel;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

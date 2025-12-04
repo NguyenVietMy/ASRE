@@ -2,147 +2,178 @@
 alwaysApply: true
 ---
 
-# Clean DDD Enforcement Rule (Auth Module + Whole Project)
+# ============================================================
 
-The login flow has been refactored to follow strict DDD boundaries. All future code must follow the exact same architectural rules.
+# Cursor Rules — Domain-Driven Design Architecture
 
-Cursor must apply this to all future generations AND fix any existing violations in files when requested.
+# ============================================================
 
-## 1. Layering Rules (Do NOT violate these)
+## GLOBAL ARCHITECTURE
 
-### Domain Layer (domain/)
+- Follow a strict layered DDD structure:
 
-- Pure business logic only.
-- No Spring imports.
-- No HttpServletRequest/Response.
-- No annotations except Lombok.
-- No JPA or database annotations.
-- No DTOs or JSON annotations.
-- Domain may contain:
-  - Aggregates
-  - Value objects
-  - Domain events
-  - Repository interfaces
-  - Domain result objects (e.g., AuthResult)
-  - Domain commands (e.g., LoginCommand)
+  - `api/` → controllers, request/response DTOs only.
+  - `application/` → commands, queries, handlers, application services.
+  - `domain/` → aggregates, entities, value objects, domain services, domain events, repository interfaces.
+  - `infra/` → repository implementations, ORM entities, messaging adapters, config, external clients.
 
-### Application Layer (application/)
+- Dependency direction is **one-way**:
 
-- Contains use-case services.
-- Accepts only domain objects (commands, aggregates).
-- Returns only domain objects (results, aggregates).
-- Must NOT accept or return:
-  - DTOs
-  - JPA entities
-  - HttpServletRequest/Response
-  - Cookies
-  - JSON
-  - Servlet APIs
+  - `api` → `application`
+  - `application` → `domain`
+  - `infra` → `domain`
+  - `domain` → no dependencies.
 
-Application services must be transport-agnostic and persistence-agnostic.
-
-### API Layer (api/)
-
-- Controllers, DTOs, HTTP-specific concerns.
-- Controller flow must ALWAYS be:
-  DTO → mapper → domain command → service → domain result → mapper → DTO.
-- Controllers handle cookies, headers, status codes.
-- DTOs never leak outside this layer.
-- No domain logic inside controllers.
-
-### Infra Layer (infra/)
-
-- Persistence implementations (JDBC or JPA).
-- Mappers converting Entity ↔ Domain.
-- External API clients.
-- Security utilities.
-- No domain logic.
-- No DTO logic.
-
-## 2. Auth Module Rules
-
-Cursor must enforce the following patterns:
-
-### Commands (Domain)
-
-- All incoming write operations must use domain-level command objects.
-  Example: LoginCommand, RegisterCommand, RefreshCommand.
-
-### Results (Domain)
-
-- All outcomes returned by services must be domain result objects.
-  Example: AuthResult.
-
-### Service Layer must NEVER use HttpServletResponse/Request
-
-- Cookie setting and all HTTP concerns belong in the controller only.
-
-### Service Layer must NEVER take primitives from controllers
-
-- Controllers must convert DTO → Domain before calling service.
-
-### Service Layer must NEVER return DTOs
-
-- Must return domain results only.
-
-### Controller must set refresh token cookie (not the service)
-
-### Service must only generate refresh token VALUE.
-
-- Controller writes it to cookie.
-- Service must not modify HTTP headers.
-
-## 3. Persistence Rules
-
-- Domain repositories define interfaces only.
-- Infra repositories implement them via JDBC or JPA.
-- Entities must never leak into domain or application layer.
-- Mappers must be used for:
-  - DTO ↔ Domain (API layer)
-  - Entity ↔ Domain (Infra layer)
-
-## 4. Fix ALL existing Auth flows
-
-Cursor must refactor:
-
-- register()
-- refresh()
-- logout()
-
-to follow the same pattern as the clean login flow.
-
-Changes required:
-
-- Extract domain-level commands where appropriate.
-- Services must accept only domain objects or primitives if domain says so.
-- Services must return AuthResult or domain equivalents.
-- All cookie writing must move into controllers.
-- Service must generate refresh token but not set cookies.
-- Ensure mappers are created where needed.
-
-## 5. Future Code Generation Rules
-
-Cursor must NOT generate:
-
-- @Entity or JPA annotations in domain.
-- DTOs in domain or application layers.
-- HttpServletResponse/Request in services.
-- Services accepting request DTOs.
-- Services returning DTOs.
-- Controllers passing primitives directly into services.
-- Controllers returning domain objects to HTTP layer.
-
-Cursor must ALWAYS generate:
-
-- Pure domain commands and results.
-- Domain → API → Domain mapping layers.
-- Transport-agnostic application services.
-- Proper repository interfaces in domain.
-- Proper repository implementations in infra.
-- Correct folder structure per layer.
-
-## 6. Safety rule
-
-If Cursor detects any ambiguity (domain missing, unclear boundaries), it must ask for clarification before generating code.
+- Never allow:
+  - `domain` importing Spring, JPA, HTTP, logging, RabbitMQ, or infra types.
+  - `application` importing infra implementations (only domain interfaces).
+  - `api` directly touching domain objects or infra.
 
 ---
+
+## DOMAIN LAYER RULES
+
+- Domain classes must contain actual business logic. Avoid anemic domain models.
+- No public setters. All state transitions must be through named domain behaviors.
+- Aggregates:
+  - Expose invariants through methods (`activate()`, `resolveIncident()`, etc.)
+  - Never reference other aggregates directly — use IDs.
+- Value Objects:
+  - Must be immutable and validate on creation.
+  - No primitives for domain concepts (use VO instead).
+- Domain services:
+  - Contain logic that spans multiple aggregates.
+  - Must be pure domain logic; no infra calls.
+- Domain events:
+  - Represent meaningful business occurrences.
+  - Stored here as plain objects (no framework annotations).
+- Repository interfaces (ports):
+  - Declared here.
+  - No persistence annotations.
+
+Allowed in `domain/`:
+
+- Aggregates
+- Entities
+- Value Objects
+- Domain Services
+- Domain Events
+- Repository interfaces
+
+Not allowed:
+
+- Spring components
+- JPA/Hibernate annotations except `@Entity` if unavoidable
+- DTOs
+- Commands/Queries
+- HTTP or messaging frameworks
+- Mappers
+
+---
+
+## APPLICATION LAYER RULES
+
+- Handles use cases and orchestration only. No business logic.
+- Commands & Queries:
+  - Simple DTO-like input objects.
+  - Belong **exclusively** in `application/` (NOT domain).
+- Handlers:
+  - `<UseCase>CommandHandler` and `<UseCase>QueryHandler`.
+  - Must orchestrate domain logic, never implement domain logic.
+  - Inject repository interfaces (not implementations).
+- Application services:
+  - Coordinate repository calls and domain operations.
+  - Convert domain objects → read models, if needed.
+
+Allowed in `application/`:
+
+- Commands
+- Queries
+- CommandHandlers
+- QueryHandlers
+- Application services
+- Mappers (application ↔ API or application ↔ domain DTOs)
+
+Not allowed:
+
+- Entities
+- Repositories implementations
+- Controllers
+- Framework-specific annotations (except @Service allowed here)
+- Business invariants
+
+---
+
+## API LAYER RULES
+
+- Only responsible for translating external requests → internal commands.
+- Must not reference domain types directly.
+- Must not implement business logic.
+
+Allowed in `api/`:
+
+- Controllers
+- Request/Response DTOs
+- Exception mappers
+- Input validation (e.g., Bean Validation)
+
+Not allowed:
+
+- Commands (must be in application)
+- Domain models
+- Repository calls
+- Business logic
+
+---
+
+## INFRASTRUCTURE LAYER RULES
+
+- Contains actual implementations of domain repository interfaces.
+- Handles persistence (JPA/Hibernate), messaging (RabbitMQ/Kafka), Redis, file storage, external APIs.
+- Should not implement business rules — only persistence + integration.
+
+Allowed in `infra/`:
+
+- Repository implementations
+- ORM Entities
+- Spring components (@Repository, @Configuration)
+- Mappers (domain ↔ persistence)
+- External service adapters
+
+Not allowed:
+
+- Commands/Queries
+- Application services
+- Domain logic
+
+---
+
+## NAMING CONVENTIONS
+
+- Ports must end with `Port` or `Repository`. Example: `NotificationPublisherPort`.
+- Adapter implementations must end with `Adapter` or `RepositoryImpl`.
+- Aggregates should end with nothing special; they live in `domain/project/Project.java`.
+- Commands: `<UseCase>Command`
+- Handlers: `<UseCase>CommandHandler`
+- Queries: `<UseCase>Query`
+- QueryHandlers: `<UseCase>QueryHandler`
+- Domain events: `<EventName>Event`
+
+---
+
+## CQRS GUIDELINES
+
+- All **write** operations use Commands + CommandHandlers.
+- All **read** operations use Queries + QueryHandlers.
+- Reads must never mutate domain state.
+- Writes must always go through aggregates or domain services.
+
+---
+
+## ENFORCEMENT SUMMARY
+
+- Commands stay in `application/`, not domain.
+- Domain layer stays pure — no infra leaks.
+- API layer never touches domain directly.
+- Infra implements ports, never imports application layer.
+- No circular imports. No cross-layer pollution.

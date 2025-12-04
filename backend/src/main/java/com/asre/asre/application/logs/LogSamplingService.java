@@ -1,7 +1,6 @@
 package com.asre.asre.application.logs;
 
 import com.asre.asre.domain.ingestion.LogEntry;
-import com.asre.asre.domain.logs.LogLevel;
 import com.asre.asre.domain.logs.LogSamplingPolicy;
 import com.asre.asre.domain.logs.LogSamplingPolicyRepository;
 import lombok.RequiredArgsConstructor;
