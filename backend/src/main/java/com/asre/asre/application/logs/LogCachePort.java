@@ -9,7 +9,7 @@ import java.util.Optional;
  * Hides cache key generation and TTL calculation from use cases.
  * Only caches analytics-style queries (volume, error spikes), not full-text search.
  */
-public interface LogCache {
+public interface LogCachePort {
     /**
      * Get a cached log volume result.
      * Cache key is derived from the query object internally.
@@ -32,5 +32,4 @@ public interface LogCache {
      */
     void putErrorSpikes(ErrorSpikeQuery query, ErrorSpikeResult result);
 }
-
 

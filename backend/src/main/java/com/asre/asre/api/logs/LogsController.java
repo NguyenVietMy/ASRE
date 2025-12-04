@@ -54,7 +54,7 @@ public class LogsController {
         try {
             UUID projectId = UUID.fromString(projectIdHeader);
             LogId domainLogId = new LogId(logId);
-            com.asre.asre.domain.logs.LogContextService.LogContext context = 
+            com.asre.asre.domain.logs.LogContextServicePort.LogContext context = 
                     logContextService.getContext(domainLogId, projectId, before, after);
             
             // Convert to response DTO

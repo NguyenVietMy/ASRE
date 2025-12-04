@@ -1,6 +1,6 @@
 package com.asre.asre.infra.metrics;
 
-import com.asre.asre.domain.alerts.MetricCatalog;
+import com.asre.asre.domain.alerts.MetricCatalogPort;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import java.util.UUID;
  * For MVP, we consider a metric to exist if there's any data in the last 30 days.
  */
 @Component
-public class MetricCatalogImpl implements MetricCatalog {
+public class MetricCatalogImpl implements MetricCatalogPort {
 
     private final JdbcTemplate timescaleJdbcTemplate;
 

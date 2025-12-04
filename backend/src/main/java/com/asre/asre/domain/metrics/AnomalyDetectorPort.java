@@ -7,7 +7,7 @@ import java.util.UUID;
  * Domain service interface for anomaly detection.
  * Implementations in infrastructure layer (integrated, not microservice).
  */
-public interface AnomalyDetector {
+public interface AnomalyDetectorPort {
     /**
      * Detect anomalies in a time series using the specified method.
      * @param dataPoints The time series data points
@@ -21,4 +21,3 @@ public interface AnomalyDetector {
             UUID serviceId,
             String metricName);
 }
-

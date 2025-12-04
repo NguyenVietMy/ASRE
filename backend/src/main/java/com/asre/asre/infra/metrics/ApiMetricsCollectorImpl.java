@@ -1,6 +1,6 @@
 package com.asre.asre.infra.metrics;
 
-import com.asre.asre.domain.ingestion.ApiMetricsCollector;
+import com.asre.asre.domain.ingestion.ApiMetricsCollectorPort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ApiMetricsCollectorImpl implements ApiMetricsCollector {
+public class ApiMetricsCollectorImpl implements ApiMetricsCollectorPort {
 
     private final MeterRegistry meterRegistry;
 

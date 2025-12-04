@@ -1,6 +1,6 @@
 package com.asre.asre.infra.security;
 
-import com.asre.asre.domain.auth.TokenService;
+import com.asre.asre.domain.auth.TokenServicePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +11,7 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
-public class JwtTokenService implements TokenService {
+public class JwtTokenService implements TokenServicePort {
 
     private final JwtUtil jwtUtil;
 

@@ -6,7 +6,7 @@ import java.util.UUID;
  * Domain port for token generation and validation.
  * Abstracts JWT implementation details from domain/application layers.
  */
-public interface TokenService {
+public interface TokenServicePort {
     /**
      * Generate an access token for a user.
      */

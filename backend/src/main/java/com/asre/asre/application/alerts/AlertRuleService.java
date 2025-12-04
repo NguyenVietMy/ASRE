@@ -19,7 +19,7 @@ import java.util.UUID;
 public class AlertRuleService {
 
     private final AlertRuleRepository alertRuleRepository;
-    private final MetricCatalog metricCatalog;
+    private final MetricCatalogPort metricCatalog;
 
     /**
      * Creates a new alert rule.

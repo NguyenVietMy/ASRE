@@ -7,7 +7,7 @@ import com.asre.asre.domain.auth.RefreshCommand;
 import com.asre.asre.domain.auth.RefreshToken;
 import com.asre.asre.domain.auth.RefreshTokenRepository;
 import com.asre.asre.domain.auth.RegisterCommand;
-import com.asre.asre.domain.auth.TokenService;
+import com.asre.asre.domain.auth.TokenServicePort;
 import com.asre.asre.domain.user.User;
 import com.asre.asre.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenService tokenService;
+    private final TokenServicePort tokenService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional

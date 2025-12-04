@@ -7,7 +7,7 @@ import java.util.List;
  * Similar to AnomalyDetector - domain defines meaning, infra implements.
  * Clustering is typically asynchronous (background jobs).
  */
-public interface LogPatternClusterer {
+public interface LogPatternClustererPort {
     /**
      * Cluster logs by pattern for a given query/segment.
      * This is the domain definition - "cluster logs by pattern".
@@ -56,5 +56,4 @@ public interface LogPatternClusterer {
         }
     }
 }
-
 

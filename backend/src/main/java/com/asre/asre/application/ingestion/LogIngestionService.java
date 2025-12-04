@@ -3,10 +3,10 @@ package com.asre.asre.application.ingestion;
 import com.asre.asre.application.logs.LogSamplingService;
 import com.asre.asre.application.service.ServiceDiscoveryService;
 import com.asre.asre.domain.ingestion.LogEntry;
-import com.asre.asre.domain.ingestion.LogIndexer;
+import com.asre.asre.domain.ingestion.LogIndexerPort;
 import com.asre.asre.domain.ingestion.LogMetadata;
 import com.asre.asre.domain.ingestion.LogMetadataRepository;
-import com.asre.asre.domain.ingestion.MetricsCollector;
+import com.asre.asre.domain.ingestion.MetricsCollectorPort;
 import com.asre.asre.domain.logs.LogId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 public class LogIngestionService {
 
     private final LogMetadataRepository logMetadataRepository;
-    private final LogIndexer logIndexer;
-    private final MetricsCollector metricsCollector;
+    private final LogIndexerPort logIndexer;
+    private final MetricsCollectorPort metricsCollector;
     private final ServiceDiscoveryService serviceDiscoveryService;
     private final LogSamplingService samplingService;
 

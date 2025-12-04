@@ -7,7 +7,7 @@ import java.util.UUID;
  * Implementations in infrastructure layer can query metric metadata or
  * check against a registry of known metrics.
  */
-public interface MetricCatalog {
+public interface MetricCatalogPort {
     /**
      * Validates that a metric exists for the given project.
      * @param projectId The project ID

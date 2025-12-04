@@ -1,6 +1,6 @@
 package com.asre.asre.infra.redis;
 
-import com.asre.asre.application.logs.LogCache;
+import com.asre.asre.application.logs.LogCachePort;
 import com.asre.asre.domain.logs.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class LogCacheImpl implements LogCache {
+public class LogCacheImpl implements LogCachePort {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;

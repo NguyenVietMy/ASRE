@@ -1,6 +1,7 @@
 package com.asre.asre.infra.metrics;
 
 import com.asre.asre.domain.metrics.*;
+import com.asre.asre.domain.metrics.AnomalyDetectorPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import java.util.stream.IntStream;
  */
 @Component
 @Slf4j
-public class AnomalyDetectorImpl implements AnomalyDetector {
+public class AnomalyDetectorImpl implements AnomalyDetectorPort {
 
     private static final double Z_SCORE_THRESHOLD = 2.5; // Standard threshold for anomalies
 

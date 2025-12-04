@@ -1,6 +1,6 @@
 package com.asre.asre.infra.rabbitmq;
 
-import com.asre.asre.application.alerts.NotificationPublisher;
+import com.asre.asre.application.alerts.NotificationPublisherPort;
 import com.asre.asre.config.RabbitMQConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RabbitMQNotificationPublisher implements NotificationPublisher {
+public class RabbitMQNotificationPublisher implements NotificationPublisherPort {
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;

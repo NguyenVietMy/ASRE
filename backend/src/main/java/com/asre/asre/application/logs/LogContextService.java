@@ -2,7 +2,7 @@ package com.asre.asre.application.logs;
 
 import com.asre.asre.domain.logs.LogContextPolicy;
 import com.asre.asre.domain.logs.LogId;
-import com.asre.asre.domain.logs.LogContextService.LogContext;
+import com.asre.asre.domain.logs.LogContextServicePort.LogContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LogContextService {
 
-    private final com.asre.asre.domain.logs.LogContextService domainContextService;
+    private final com.asre.asre.domain.logs.LogContextServicePort domainContextService;
 
     /**
      * Get log context around a specific log entry.

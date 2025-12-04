@@ -4,7 +4,7 @@ package com.asre.asre.domain.ingestion;
  * Port for collecting metrics about ingestion operations.
  * Implementation will be in infrastructure layer (Micrometer/Prometheus).
  */
-public interface MetricsCollector {
+public interface MetricsCollectorPort {
     void recordMetricsIngested(long count);
 
     void recordMetricsIngestionError();

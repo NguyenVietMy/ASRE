@@ -3,7 +3,7 @@ package com.asre.asre.application.ingestion;
 import com.asre.asre.application.service.ServiceDiscoveryService;
 import com.asre.asre.domain.ingestion.Metric;
 import com.asre.asre.domain.ingestion.MetricRepository;
-import com.asre.asre.domain.ingestion.MetricsCollector;
+import com.asre.asre.domain.ingestion.MetricsCollectorPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class MetricIngestionService {
 
     private final MetricRepository metricRepository;
-    private final MetricsCollector metricsCollector;
+    private final MetricsCollectorPort metricsCollector;
     private final ServiceDiscoveryService serviceDiscoveryService;
 
     @Transactional

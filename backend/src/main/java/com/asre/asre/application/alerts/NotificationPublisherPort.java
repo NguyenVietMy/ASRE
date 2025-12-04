@@ -7,7 +7,7 @@ import java.util.UUID;
  * Port for publishing notification requests.
  * Implementations in infrastructure layer handle actual delivery.
  */
-public interface NotificationPublisher {
+public interface NotificationPublisherPort {
     /**
      * Publishes a notification request.
      * @param projectId The project ID

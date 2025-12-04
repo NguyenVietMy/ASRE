@@ -1,6 +1,6 @@
 package com.asre.asre.infra.redis;
 
-import com.asre.asre.application.metrics.MetricCache;
+import com.asre.asre.application.metrics.MetricCachePort;
 import com.asre.asre.domain.metrics.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MetricCacheImpl implements MetricCache {
+public class MetricCacheImpl implements MetricCachePort {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;

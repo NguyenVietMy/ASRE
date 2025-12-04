@@ -16,7 +16,7 @@ import java.util.UUID;
 public class ApiKeyService {
 
     private final ProjectRepository projectRepository;
-    private final ApiKeyCache apiKeyCache;
+    private final ApiKeyCachePort apiKeyCache;
 
     @Value("${api.key.cache.ttl-seconds:300}")
     private int cacheTtlSeconds;

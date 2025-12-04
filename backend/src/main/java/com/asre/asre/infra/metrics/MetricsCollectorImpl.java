@@ -1,6 +1,6 @@
 package com.asre.asre.infra.metrics;
 
-import com.asre.asre.domain.ingestion.MetricsCollector;
+import com.asre.asre.domain.ingestion.MetricsCollectorPort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MetricsCollectorImpl implements MetricsCollector {
+public class MetricsCollectorImpl implements MetricsCollectorPort {
 
     private final MeterRegistry meterRegistry;
 

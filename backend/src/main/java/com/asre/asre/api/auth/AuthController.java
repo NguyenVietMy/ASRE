@@ -6,7 +6,7 @@ import com.asre.asre.domain.auth.LoginCommand;
 import com.asre.asre.domain.auth.LogoutCommand;
 import com.asre.asre.domain.auth.RefreshCommand;
 import com.asre.asre.domain.auth.RegisterCommand;
-import com.asre.asre.domain.auth.TokenService;
+import com.asre.asre.domain.auth.TokenServicePort;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthDtoMapper mapper;
-    private final TokenService tokenService;
+    private final TokenServicePort tokenService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request,

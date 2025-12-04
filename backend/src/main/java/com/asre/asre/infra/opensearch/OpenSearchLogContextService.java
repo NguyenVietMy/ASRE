@@ -27,7 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OpenSearchLogContextService implements LogContextService {
+public class OpenSearchLogContextService implements LogContextServicePort {
 
     private final RestHighLevelClient openSearchClient;
     private final OpenSearchLogQueryRepository queryRepository;
@@ -49,7 +49,7 @@ public class OpenSearchLogContextService implements LogContextService {
         // Get logs after (later timestamp, or same timestamp but later ingested_at)
         List<LogEntry> afterLogs = getLogsAfter(targetLog, projectId, afterCount);
 
-        return new LogContext(targetLog, beforeLogs, afterLogs);
+        return new LogContextServicePort.LogContext(targetLog, beforeLogs, afterLogs);
     }
 
     private List<LogEntry> getLogsBefore(LogEntry targetLog, UUID projectId, int count) {

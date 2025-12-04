@@ -2,7 +2,7 @@ package com.asre.asre.application.ingestion;
 
 import com.asre.asre.domain.ingestion.IngestLogsCommand;
 import com.asre.asre.domain.ingestion.IngestMetricsCommand;
-import com.asre.asre.domain.ingestion.MessagePublisher;
+import com.asre.asre.domain.ingestion.MessagePublisherPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 public class IngestionService {
 
-    private final MessagePublisher messagePublisher;
+    private final MessagePublisherPort messagePublisher;
     private final ObjectMapper objectMapper;
 
     public void ingestMetrics(IngestMetricsCommand command) {

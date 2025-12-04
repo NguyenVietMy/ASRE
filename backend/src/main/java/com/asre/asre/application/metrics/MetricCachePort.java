@@ -9,7 +9,7 @@ import java.util.Optional;
  * Hides cache key generation and TTL calculation from use cases.
  * Implementations in infrastructure layer.
  */
-public interface MetricCache {
+public interface MetricCachePort {
     /**
      * Get a cached metric query result.
      * Cache key is derived from the query object internally.

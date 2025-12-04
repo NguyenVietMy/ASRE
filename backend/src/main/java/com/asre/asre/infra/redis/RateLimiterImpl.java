@@ -1,6 +1,6 @@
 package com.asre.asre.infra.redis;
 
-import com.asre.asre.application.ratelimit.RateLimiter;
+import com.asre.asre.application.ratelimit.RateLimiterPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -14,7 +14,7 @@ import java.util.List;
  */
 @Component
 @Slf4j
-public class RateLimiterImpl implements RateLimiter {
+public class RateLimiterImpl implements RateLimiterPort {
 
     private static final String RATE_LIMIT_KEY_PREFIX = "ratelimit:";
     private static final String LUA_SCRIPT = """

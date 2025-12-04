@@ -18,8 +18,8 @@ import java.util.List;
 public class MetricsQueryService {
 
     private final MetricQueryRepository queryRepository;
-    private final MetricCache cache;
-    private final AnomalyDetector anomalyDetector;
+    private final MetricCachePort cache;
+    private final AnomalyDetectorPort anomalyDetector;
     private final AnomalyDetectionResultRepository anomalyRepository;
 
     /**

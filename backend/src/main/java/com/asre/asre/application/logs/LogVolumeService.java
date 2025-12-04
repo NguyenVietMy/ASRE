@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class LogVolumeService {
 
     private final LogVolumeRepository volumeRepository;
-    private final LogCache cache;
+    private final LogCachePort cache;
     private final LogQueryValidator queryValidator = new LogQueryValidator(); // Domain service, no dependencies
     private final ErrorSpikeDetector spikeDetector = new ErrorSpikeDetector(); // Domain service, no dependencies
 

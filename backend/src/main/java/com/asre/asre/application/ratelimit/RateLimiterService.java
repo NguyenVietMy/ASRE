@@ -12,7 +12,7 @@ import java.util.UUID;
 @Slf4j
 public class RateLimiterService {
 
-    private final RateLimiter rateLimiter;
+    private final RateLimiterPort rateLimiter;
 
     /**
      * Checks if request is within rate limit for the given project.

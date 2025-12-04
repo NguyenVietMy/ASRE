@@ -16,7 +16,7 @@ import java.util.UUID;
 @Slf4j
 public class NotificationService {
 
-    private final NotificationPublisher notificationPublisher;
+    private final NotificationPublisherPort notificationPublisher;
 
     /**
      * Requests a notification to be sent.

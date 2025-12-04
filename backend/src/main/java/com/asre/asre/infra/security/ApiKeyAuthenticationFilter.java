@@ -2,7 +2,7 @@ package com.asre.asre.infra.security;
 
 import com.asre.asre.application.apikey.ApiKeyService;
 import com.asre.asre.application.ratelimit.RateLimiterService;
-import com.asre.asre.domain.ingestion.ApiMetricsCollector;
+import com.asre.asre.domain.ingestion.ApiMetricsCollectorPort;
 import com.asre.asre.domain.project.Project;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,7 +30,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiKeyService apiKeyService;
     private final RateLimiterService rateLimiterService;
-    private final ApiMetricsCollector apiMetricsCollector;
+    private final ApiMetricsCollectorPort apiMetricsCollector;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

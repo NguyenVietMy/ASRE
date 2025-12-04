@@ -1,6 +1,6 @@
 package com.asre.asre.infra.redis;
 
-import com.asre.asre.application.apikey.ApiKeyCache;
+import com.asre.asre.application.apikey.ApiKeyCachePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ApiKeyCacheImpl implements ApiKeyCache {
+public class ApiKeyCacheImpl implements ApiKeyCachePort {
 
     private static final String CACHE_KEY_PREFIX = "apikey:project:";
 

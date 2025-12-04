@@ -9,7 +9,7 @@ import java.util.List;
  * Defines the meaning: "log context around event".
  * Repository executes the actual queries.
  */
-public interface LogContextService {
+public interface LogContextServicePort {
     /**
      * Get log context around a specific log entry.
      * Returns the target log plus surrounding logs (before and after).
@@ -53,5 +53,4 @@ public interface LogContextService {
         }
     }
 }
-
 

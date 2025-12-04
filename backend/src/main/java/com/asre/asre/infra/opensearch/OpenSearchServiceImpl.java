@@ -1,6 +1,6 @@
 package com.asre.asre.infra.opensearch;
 
-import com.asre.asre.domain.ingestion.LogIndexer;
+import com.asre.asre.domain.ingestion.LogIndexerPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.action.bulk.BulkRequest;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OpenSearchServiceImpl implements LogIndexer {
+public class OpenSearchServiceImpl implements LogIndexerPort {
 
     @Value("${opensearch.index.name:opensearch-logs}")
     private String indexName;
