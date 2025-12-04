@@ -23,7 +23,8 @@ import java.util.stream.Collectors;
 
 /**
  * OpenSearch implementation of LogQueryRepository.
- * Maps domain queries to OpenSearch SearchRequest and results back to domain objects.
+ * Maps domain queries to OpenSearch SearchRequest and results back to domain
+ * objects.
  */
 @Repository
 @RequiredArgsConstructor
@@ -56,17 +57,17 @@ public class OpenSearchLogQueryRepository implements LogQueryRepository {
         try {
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            
+
             BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
                     .must(QueryBuilders.termQuery("_id", logId.getValue()))
                     .must(QueryBuilders.termQuery("project_id", projectId.toString()));
-            
+
             sourceBuilder.query(boolQuery);
             sourceBuilder.size(1);
             searchRequest.source(sourceBuilder);
 
             SearchResponse response = openSearchClient.search(searchRequest, RequestOptions.DEFAULT);
-            
+
             if (response.getHits().getTotalHits().value == 0) {
                 throw new LogNotFoundException("Log not found: " + logId.getValue());
             }
@@ -85,11 +86,11 @@ public class OpenSearchLogQueryRepository implements LogQueryRepository {
         try {
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            
+
             BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
                     .must(QueryBuilders.termQuery("project_id", query.getProjectId().toString()))
                     .must(QueryBuilders.termQuery("trace_id", query.getTraceId()));
-            
+
             sourceBuilder.query(boolQuery);
             sourceBuilder.sort("timestamp", SortOrder.ASC); // Trace logs sorted by timestamp
             sourceBuilder.size(10000); // Traces can have many logs
@@ -121,7 +122,7 @@ public class OpenSearchLogQueryRepository implements LogQueryRepository {
         // Service filter
         query.getServiceFilter().ifPresent(filter -> {
             if (filter.requiresService()) {
-                boolQuery.must(QueryBuilders.termQuery("service_id", 
+                boolQuery.must(QueryBuilders.termQuery("service_id",
                         filter.getServiceId().get().toString()));
             }
         });
@@ -147,14 +148,14 @@ public class OpenSearchLogQueryRepository implements LogQueryRepository {
         sourceBuilder.query(boolQuery);
 
         // Sorting
-        String sortField = query.getSortOrder().getField() == LogSortOrder.LogSortField.TIMESTAMP 
-                ? "timestamp" 
+        String sortField = query.getSortOrder().getField() == LogSortOrder.LogSortField.TIMESTAMP
+                ? "timestamp"
                 : "ingested_at";
         SortOrder sortOrder = query.getSortOrder().getDirection() == LogSortOrder.SortDirection.ASC
                 ? SortOrder.ASC
                 : SortOrder.DESC;
         sourceBuilder.sort(sortField, sortOrder);
-        
+
         // Secondary sort by ingested_at for stable pagination
         if (sortField.equals("timestamp")) {
             sourceBuilder.sort("ingested_at", sortOrder);
@@ -193,24 +194,27 @@ public class OpenSearchLogQueryRepository implements LogQueryRepository {
     }
 
     private LogPaginationToken extractPaginationToken(SearchResponse response, List<LogEntry> logs) {
-        if (logs.isEmpty() || response.getHits().getHits().length < response.getHits().getTotalHits().value) {
+        SearchHit[] hits = response.getHits().getHits();
+
+        // Only extract pagination token if there are actual hits and more results
+        // available
+        if (!logs.isEmpty() && hits.length > 0 && hits.length < response.getHits().getTotalHits().value) {
             // There are more results
-            SearchHit lastHit = response.getHits().getHits()[response.getHits().getHits().length - 1];
+            SearchHit lastHit = hits[hits.length - 1];
             Object[] searchAfter = lastHit.getSortValues();
-            
+
             if (searchAfter != null && searchAfter.length > 0) {
                 // Encode search_after array as base64 string
                 StringBuilder tokenValue = new StringBuilder();
                 for (int i = 0; i < searchAfter.length; i++) {
-                    if (i > 0) tokenValue.append("|");
+                    if (i > 0)
+                        tokenValue.append("|");
                     tokenValue.append(searchAfter[i] != null ? searchAfter[i].toString() : "");
                 }
                 String encoded = Base64.getEncoder().encodeToString(tokenValue.toString().getBytes());
                 return new LogPaginationToken(encoded);
             }
         }
-        return null; // No more results
+        return null; // No more results or no hits to paginate
     }
 }
-
-
