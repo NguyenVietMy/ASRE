@@ -13,11 +13,12 @@ public class ProjectEntityMapper {
         return new Project(
                 entity.getId(),
                 entity.getName(),
+                entity.getDescription(),
                 entity.getApiKey(),
                 entity.getOwnerUserId(),
                 entity.getRateLimitPerMinute(),
-                entity.getCreatedAt()
-        );
+                entity.getCreatedAt(),
+                entity.getDeletedAt());
     }
 
     public ProjectEntity toEntity(Project domain) {
@@ -27,11 +28,11 @@ public class ProjectEntityMapper {
         return new ProjectEntity(
                 domain.getId(),
                 domain.getName(),
+                domain.getDescription(),
                 domain.getApiKey(),
                 domain.getOwnerUserId(),
                 domain.getRateLimitPerMinute(),
-                domain.getCreatedAt()
-        );
+                domain.getCreatedAt(),
+                domain.getDeletedAt());
     }
 }
-

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -96,5 +97,13 @@ public class JpaServiceRepository implements ServiceRepository {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, projectId, name);
         return count != null && count > 0;
     }
-}
 
+    @Override
+    public List<Service> findByProjectId(UUID projectId) {
+        String sql = "SELECT id, project_id, name, created_at, last_seen_at FROM services WHERE project_id = ? ORDER BY last_seen_at DESC NULLS LAST, created_at DESC";
+        List<ServiceEntity> entities = jdbcTemplate.query(sql, SERVICE_ENTITY_ROW_MAPPER, projectId);
+        return entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+}

@@ -16,10 +16,10 @@ import java.util.UUID;
 public class ProjectEntity {
     private UUID id;
     private String name;
+    private String description;
     private String apiKey;
     private UUID ownerUserId;
     private Integer rateLimitPerMinute;
     private Instant createdAt;
+    private Instant deletedAt;
 }
-
-
