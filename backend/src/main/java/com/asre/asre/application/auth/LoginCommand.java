@@ -1,4 +1,4 @@
-package com.asre.asre.domain.auth;
+package com.asre.asre.application.auth;
 
 import lombok.Value;
 

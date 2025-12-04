@@ -2,8 +2,8 @@ package com.asre.asre.api.ingestion;
 
 import com.asre.asre.api.ingestion.dto.LogsIngestionRequest;
 import com.asre.asre.api.ingestion.dto.MetricsIngestionRequest;
-import com.asre.asre.domain.ingestion.IngestLogsCommand;
-import com.asre.asre.domain.ingestion.IngestMetricsCommand;
+import com.asre.asre.application.ingestion.IngestLogsCommand;
+import com.asre.asre.application.ingestion.IngestMetricsCommand;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

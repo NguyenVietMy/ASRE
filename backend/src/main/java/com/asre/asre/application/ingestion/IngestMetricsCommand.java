@@ -1,4 +1,4 @@
-package com.asre.asre.domain.ingestion;
+package com.asre.asre.application.ingestion;
 
 import lombok.Value;
 
@@ -20,5 +20,4 @@ public class IngestMetricsCommand {
         Map<String, String> tags;
     }
 }
-
 

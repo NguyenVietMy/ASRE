@@ -1,10 +1,10 @@
 package com.asre.asre.api.auth;
 
 import com.asre.asre.domain.auth.AuthResult;
-import com.asre.asre.domain.auth.LoginCommand;
-import com.asre.asre.domain.auth.LogoutCommand;
-import com.asre.asre.domain.auth.RefreshCommand;
-import com.asre.asre.domain.auth.RegisterCommand;
+import com.asre.asre.application.auth.LoginCommand;
+import com.asre.asre.application.auth.LogoutCommand;
+import com.asre.asre.application.auth.RefreshCommand;
+import com.asre.asre.application.auth.RegisterCommand;
 import org.springframework.stereotype.Component;
 
 @Component
