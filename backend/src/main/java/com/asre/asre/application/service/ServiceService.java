@@ -60,6 +60,13 @@ public class ServiceService {
     }
 
     /**
+     * Gets incidents for a service.
+     */
+    public List<com.asre.asre.domain.alerts.Incident> getServiceIncidents(UUID serviceId) {
+        return incidentRepository.findByServiceId(serviceId);
+    }
+
+    /**
      * Gets service overview with aggregated metrics.
      */
     public ServiceOverview getServiceOverview(UUID serviceId, UUID projectId) {

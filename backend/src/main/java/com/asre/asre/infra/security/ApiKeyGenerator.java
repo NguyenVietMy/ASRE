@@ -1,16 +1,18 @@
 package com.asre.asre.infra.security;
 
+import com.asre.asre.domain.project.ApiKeyGeneratorPort;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
+ * Infrastructure implementation of ApiKeyGeneratorPort.
  * Utility for generating API keys.
  * Format: asre_sk_<22-char-random>
  */
 @Component
-public class ApiKeyGenerator {
+public class ApiKeyGenerator implements ApiKeyGeneratorPort {
 
     private static final String PREFIX = "asre_sk_";
     private static final int RANDOM_BYTES = 16; // 16 bytes = 22 chars in base64

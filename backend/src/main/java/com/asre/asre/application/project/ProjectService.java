@@ -1,8 +1,8 @@
 package com.asre.asre.application.project;
 
+import com.asre.asre.domain.project.ApiKeyGeneratorPort;
 import com.asre.asre.domain.project.Project;
 import com.asre.asre.domain.project.ProjectRepository;
-import com.asre.asre.infra.security.ApiKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import java.util.UUID;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final ApiKeyGenerator apiKeyGenerator;
+    private final ApiKeyGeneratorPort apiKeyGenerator;
 
     /**
      * Creates a new project with auto-generated API key.
@@ -60,6 +60,14 @@ public class ProjectService {
                 .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
         project.ensureOwnedBy(ownerUserId);
         return project;
+    }
+
+    /**
+     * Validates that a project exists and belongs to the user.
+     * Throws IllegalArgumentException if not found or not owned.
+     */
+    public void validateProjectOwnership(UUID projectId, UUID ownerUserId) {
+        getProject(projectId, ownerUserId);
     }
 
     /**

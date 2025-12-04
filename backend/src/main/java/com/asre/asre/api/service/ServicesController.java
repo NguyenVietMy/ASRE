@@ -3,11 +3,9 @@ package com.asre.asre.api.service;
 import com.asre.asre.api.service.dto.ServiceDetailResponse;
 import com.asre.asre.api.service.dto.ServiceOverviewResponse;
 import com.asre.asre.api.service.dto.ServiceResponse;
+import com.asre.asre.application.project.ProjectService;
 import com.asre.asre.application.service.ServiceService;
 import com.asre.asre.domain.alerts.Incident;
-import com.asre.asre.domain.alerts.IncidentRepository;
-import com.asre.asre.domain.project.Project;
-import com.asre.asre.domain.project.ProjectRepository;
 import com.asre.asre.domain.service.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +25,8 @@ import java.util.stream.Collectors;
 public class ServicesController {
 
     private final ServiceService serviceService;
+    private final ProjectService projectService;
     private final ServicesDtoMapper mapper;
-    private final IncidentRepository incidentRepository;
-    private final ProjectRepository projectRepository;
 
     /**
      * Extract userId from JWT authentication.
@@ -41,14 +38,6 @@ public class ServicesController {
         return UUID.fromString(authentication.getName());
     }
 
-    /**
-     * Validate that project belongs to user.
-     */
-    private void validateProjectOwnership(UUID projectId, UUID userId) {
-        Project project = projectRepository.findByIdAndNotDeleted(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
-        project.ensureOwnedBy(userId);
-    }
 
     @GetMapping
     public ResponseEntity<?> listServices(
@@ -56,14 +45,14 @@ public class ServicesController {
             Authentication authentication) {
         try {
             UUID userId = getCurrentUserId(authentication);
-            validateProjectOwnership(projectId, userId);
+            projectService.validateProjectOwnership(projectId, userId);
             
             List<Service> services = serviceService.listServices(projectId);
             
             // Get recent incidents for each service
             List<ServiceResponse> responses = services.stream()
                     .map(service -> {
-                        List<Incident> incidents = incidentRepository.findByServiceId(service.getId());
+                        List<Incident> incidents = serviceService.getServiceIncidents(service.getId());
                         return mapper.toResponse(service, incidents);
                     })
                     .collect(Collectors.toList());
@@ -85,10 +74,10 @@ public class ServicesController {
             Authentication authentication) {
         try {
             UUID userId = getCurrentUserId(authentication);
-            validateProjectOwnership(projectId, userId);
+            projectService.validateProjectOwnership(projectId, userId);
             
             Service service = serviceService.getService(id, projectId);
-            List<Incident> incidents = incidentRepository.findByServiceId(id);
+            List<Incident> incidents = serviceService.getServiceIncidents(id);
             int activeIncidents = (int) incidents.stream()
                     .filter(inc -> inc.getStatus().name().equals("OPEN") || 
                                   inc.getStatus().name().equals("ACKNOWLEDGED"))
@@ -112,7 +101,7 @@ public class ServicesController {
             Authentication authentication) {
         try {
             UUID userId = getCurrentUserId(authentication);
-            validateProjectOwnership(projectId, userId);
+            projectService.validateProjectOwnership(projectId, userId);
             
             ServiceService.ServiceOverview overview = serviceService.getServiceOverview(id, projectId);
             ServiceOverviewResponse response = mapper.toOverviewResponse(overview);
@@ -133,7 +122,7 @@ public class ServicesController {
             Authentication authentication) {
         try {
             UUID userId = getCurrentUserId(authentication);
-            validateProjectOwnership(projectId, userId);
+            projectService.validateProjectOwnership(projectId, userId);
             
             // Validate service belongs to project
             serviceService.getService(id, projectId);

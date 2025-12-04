@@ -78,14 +78,18 @@ public class JpaServiceRepository implements ServiceRepository {
             if (existing.isEmpty()) {
                 // Insert with provided ID
                 Instant now = entity.getCreatedAt() != null ? entity.getCreatedAt() : Instant.now();
+                Instant lastSeen = entity.getLastSeenAt() != null ? entity.getLastSeenAt() : now;
                 String sql = "INSERT INTO services (id, project_id, name, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)";
                 jdbcTemplate.update(sql, entity.getId(), entity.getProjectId(), entity.getName(),
-                        Timestamp.from(now), Timestamp.from(entity.getLastSeenAt()));
+                        Timestamp.from(now), Timestamp.from(lastSeen));
                 entity.setCreatedAt(now);
+                entity.setLastSeenAt(lastSeen);
             } else {
                 // Update existing service
+                Instant lastSeen = entity.getLastSeenAt() != null ? entity.getLastSeenAt() : Instant.now();
                 String sql = "UPDATE services SET name = ?, last_seen_at = ? WHERE id = ?";
-                jdbcTemplate.update(sql, entity.getName(), Timestamp.from(entity.getLastSeenAt()), entity.getId());
+                jdbcTemplate.update(sql, entity.getName(), Timestamp.from(lastSeen), entity.getId());
+                entity.setLastSeenAt(lastSeen);
             }
         }
         return mapper.toDomain(entity);
