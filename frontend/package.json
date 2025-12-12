@@ -9,13 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.13.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.487.0",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "lucide-react": "^0.487.0",
+    "react-hook-form": "^7.68.0",
+    "react-hot-toast": "^2.6.0",
     "recharts": "^2.15.2",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
