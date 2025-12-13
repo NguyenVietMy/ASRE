@@ -51,11 +51,16 @@ public class JpaProjectRepository implements ProjectRepository {
     private static final String INSERT_SQL = """
             INSERT INTO projects (id, name, description, api_key, owner_user_id, rate_limit_per_minute, created_at, deleted_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (id) DO UPDATE SET
-                name = EXCLUDED.name,
-                description = EXCLUDED.description,
-                rate_limit_per_minute = EXCLUDED.rate_limit_per_minute,
-                deleted_at = EXCLUDED.deleted_at
+            """;
+
+    private static final String UPDATE_SQL = """
+            UPDATE projects SET
+                name = ?,
+                description = ?,
+                api_key = ?,
+                rate_limit_per_minute = ?,
+                deleted_at = ?
+            WHERE id = ?
             """;
 
     private static final String SOFT_DELETE_SQL = """
@@ -138,15 +143,43 @@ public class JpaProjectRepository implements ProjectRepository {
             entity.setCreatedAt(Instant.now());
         }
 
-        jdbcTemplate.update(INSERT_SQL,
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getApiKey(),
-                entity.getOwnerUserId(),
-                entity.getRateLimitPerMinute(),
-                entity.getCreatedAt(),
-                entity.getDeletedAt());
+        // Check if project exists
+        Optional<Project> existing = findById(entity.getId());
+
+        if (existing.isPresent()) {
+            // Update existing project
+            jdbcTemplate.update(UPDATE_SQL,
+                    entity.getName(),
+                    entity.getDescription(),
+                    entity.getApiKey(),
+                    entity.getRateLimitPerMinute(),
+                    entity.getDeletedAt() != null ? java.sql.Timestamp.from(entity.getDeletedAt()) : null,
+                    entity.getId());
+        } else {
+            // Insert new project
+            // Handle potential race condition: if insert fails due to duplicate key, retry
+            // as update
+            try {
+                jdbcTemplate.update(INSERT_SQL,
+                        entity.getId(),
+                        entity.getName(),
+                        entity.getDescription(),
+                        entity.getApiKey(),
+                        entity.getOwnerUserId(),
+                        entity.getRateLimitPerMinute(),
+                        java.sql.Timestamp.from(entity.getCreatedAt()),
+                        entity.getDeletedAt() != null ? java.sql.Timestamp.from(entity.getDeletedAt()) : null);
+            } catch (org.springframework.dao.DuplicateKeyException e) {
+                // Race condition: another thread inserted the same ID, retry as update
+                jdbcTemplate.update(UPDATE_SQL,
+                        entity.getName(),
+                        entity.getDescription(),
+                        entity.getApiKey(),
+                        entity.getRateLimitPerMinute(),
+                        entity.getDeletedAt() != null ? java.sql.Timestamp.from(entity.getDeletedAt()) : null,
+                        entity.getId());
+            }
+        }
 
         return mapper.toDomain(entity);
     }

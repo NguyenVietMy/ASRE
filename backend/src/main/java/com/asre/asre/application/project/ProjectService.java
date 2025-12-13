@@ -1,10 +1,12 @@
 package com.asre.asre.application.project;
 
+import com.asre.asre.application.apikey.ApiKeyCachePort;
 import com.asre.asre.domain.project.ApiKeyGeneratorPort;
 import com.asre.asre.domain.project.Project;
 import com.asre.asre.domain.project.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,10 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ApiKeyGeneratorPort apiKeyGenerator;
+    private final ApiKeyCachePort apiKeyCache;
+
+    @Value("${api.key.cache.ttl-seconds:300}")
+    private int cacheTtlSeconds;
 
     /**
      * Creates a new project with auto-generated API key.
@@ -105,6 +111,9 @@ public class ProjectService {
     public String regenerateApiKey(UUID projectId, UUID ownerUserId) {
         Project project = getProject(projectId, ownerUserId);
 
+        // Get old API key before regenerating
+        String oldApiKey = project.getApiKey();
+
         // Generate new key
         String newApiKey = apiKeyGenerator.generateApiKey();
 
@@ -112,11 +121,16 @@ public class ProjectService {
         project.setApiKey(newApiKey);
         projectRepository.save(project);
 
-        // Invalidate old key from cache
-        // Note: For grace period, we'd need to track old keys in a separate table
-        // For MVP, we'll just update immediately
+        // Invalidate old key from cache immediately
+        if (oldApiKey != null && !oldApiKey.isBlank()) {
+            apiKeyCache.invalidate(oldApiKey);
+            log.info("Invalidated old API key from cache for project: {}", projectId);
+        }
+
+        // Cache the new key
+        apiKeyCache.cacheProjectId(newApiKey, projectId, cacheTtlSeconds);
+        log.info("Cached new API key for project: {}", projectId);
 
         return newApiKey;
     }
 }
-
