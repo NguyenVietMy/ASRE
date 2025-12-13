@@ -23,7 +23,16 @@ public class IngestionService {
             for (var metric : command.getMetrics()) {
                 Map<String, Object> message = new HashMap<>();
                 message.put("project_id", command.getProjectId().toString());
-                message.put("service_id", metric.getServiceId().toString());
+                // Handle null serviceId - will be discovered by service name in worker
+                if (metric.getServiceId() != null) {
+                    message.put("service_id", metric.getServiceId().toString());
+                } else {
+                    // Use service name from tags or default name for auto-discovery
+                    String serviceName = metric.getTags() != null && metric.getTags().containsKey("service_name")
+                            ? metric.getTags().get("service_name")
+                            : "default-service";
+                    message.put("service_name", serviceName);
+                }
                 message.put("metric_name", metric.getMetricName());
                 message.put("value", metric.getValue());
                 message.put("timestamp", metric.getTimestamp());
@@ -44,7 +53,16 @@ public class IngestionService {
             for (var log : command.getLogs()) {
                 Map<String, Object> message = new HashMap<>();
                 message.put("project_id", command.getProjectId().toString());
-                message.put("service_id", log.getServiceId().toString());
+                // Handle null serviceId - will be discovered by service name in worker
+                if (log.getServiceId() != null) {
+                    message.put("service_id", log.getServiceId().toString());
+                } else {
+                    // Use service name from context or default name for auto-discovery
+                    String serviceName = log.getContext() != null && log.getContext().containsKey("service_name")
+                            ? String.valueOf(log.getContext().get("service_name"))
+                            : "default-service";
+                    message.put("service_name", serviceName);
+                }
                 message.put("level", log.getLevel());
                 message.put("message", log.getMessage());
                 message.put("timestamp", log.getTimestamp());

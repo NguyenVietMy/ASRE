@@ -2,6 +2,7 @@ package com.asre.asre.infra.rabbitmq;
 
 import com.asre.asre.application.ingestion.LogIngestionService;
 import com.asre.asre.domain.ingestion.LogEntry;
+import com.asre.asre.domain.service.ServiceDiscoveryPort;
 import com.asre.asre.domain.logs.LogLevel;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +30,7 @@ public class LogsIngestionWorker {
     private final LogIngestionService logIngestionService;
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
+    private final ServiceDiscoveryPort serviceDiscoveryPort;
 
     @Value("${ingestion.batch.size:100}")
     private int batchSize;
@@ -44,7 +46,8 @@ public class LogsIngestionWorker {
     public void handleMessage(String message) {
         try {
             // Parse message
-            Map<String, Object> payload = objectMapper.readValue(message, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> payload = objectMapper.readValue(message, new TypeReference<Map<String, Object>>() {
+            });
             LogEntry logEntry = parseLogEntry(payload);
 
             if (logEntry == null || !logEntry.isValid()) {
@@ -104,7 +107,27 @@ public class LogsIngestionWorker {
     private LogEntry parseLogEntry(Map<String, Object> payload) {
         try {
             UUID projectId = UUID.fromString((String) payload.get("project_id"));
-            UUID serviceId = UUID.fromString((String) payload.get("service_id"));
+
+            // Handle serviceId - either from payload or discover by name
+            UUID serviceId = null;
+            if (payload.containsKey("service_id") && payload.get("service_id") != null) {
+                serviceId = UUID.fromString((String) payload.get("service_id"));
+            } else {
+                // Discover service by name (or use default)
+                String serviceName = payload.containsKey("service_name")
+                        ? (String) payload.get("service_name")
+                        : "default-service";
+                try {
+                    var service = serviceDiscoveryPort.discoverService(projectId, null, serviceName);
+                    serviceId = service.getId();
+                } catch (Exception e) {
+                    log.error("Failed to discover service '{}' for project {}, cannot proceed", serviceName, projectId,
+                            e);
+                    // Return null so it goes to DLQ - service discovery must succeed
+                    return null;
+                }
+            }
+
             LogLevel level = LogLevel.fromString((String) payload.get("level"));
             String message = (String) payload.get("message");
             String timestampStr = (String) payload.get("timestamp");
@@ -142,4 +165,3 @@ public class LogsIngestionWorker {
         }
     }
 }
-
