@@ -2,7 +2,6 @@ package com.asre.asre.infra.jdbc;
 
 import com.asre.asre.domain.ingestion.Metric;
 import com.asre.asre.domain.ingestion.MetricRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,17 +13,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
-@RequiredArgsConstructor
 @Slf4j
 public class TimescaleMetricRepository implements MetricRepository {
 
     private static final String INSERT_SQL = """
-            INSERT INTO metrics (time, project_id, service_id, metric_name, value, tags)
+            INSERT INTO public.metrics (time, project_id, service_id, metric_name, value, tags)
             VALUES (?, ?, ?, ?, ?, ?::jsonb)
             """;
 
-    @Qualifier("timescaledbJdbcTemplate")
     private final JdbcTemplate timescaleJdbcTemplate;
+
+    public TimescaleMetricRepository(@Qualifier("timescaledbJdbcTemplate") JdbcTemplate timescaleJdbcTemplate) {
+        this.timescaleJdbcTemplate = timescaleJdbcTemplate;
+    }
 
     @Override
     public void saveBatch(List<Metric> metrics) {
@@ -33,7 +34,7 @@ public class TimescaleMetricRepository implements MetricRepository {
         }
 
         List<Object[]> batchArgs = metrics.stream()
-                .map(metric -> new Object[]{
+                .map(metric -> new Object[] {
                         Timestamp.from(metric.getTimestamp()),
                         metric.getProjectId(),
                         metric.getServiceId(),
@@ -70,4 +71,3 @@ public class TimescaleMetricRepository implements MetricRepository {
         return json.toString();
     }
 }
-

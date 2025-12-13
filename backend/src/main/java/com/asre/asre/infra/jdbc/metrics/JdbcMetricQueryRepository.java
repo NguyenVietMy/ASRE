@@ -1,7 +1,6 @@
 package com.asre.asre.infra.jdbc.metrics;
 
 import com.asre.asre.domain.metrics.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,12 +15,14 @@ import java.util.List;
  * Executes queries against TimescaleDB using time_bucket for aggregation.
  */
 @Repository
-@RequiredArgsConstructor
 @Slf4j
 public class JdbcMetricQueryRepository implements MetricQueryRepository {
 
-    @Qualifier("timescaledbJdbcTemplate")
     private final JdbcTemplate timescaleJdbcTemplate;
+
+    public JdbcMetricQueryRepository(@Qualifier("timescaledbJdbcTemplate") JdbcTemplate timescaleJdbcTemplate) {
+        this.timescaleJdbcTemplate = timescaleJdbcTemplate;
+    }
 
     @Override
     public MetricQueryResult executeQuery(MetricQuery query) {
@@ -167,8 +168,11 @@ public class JdbcMetricQueryRepository implements MetricQueryRepository {
     }
 
     private String buildQuerySql(MetricQuery query) {
+        // Format interval for embedding in SQL (safe because it's from our own formatInterval method)
+        String interval = formatInterval(query.getRollupPeriod());
+        
         StringBuilder sql = new StringBuilder("SELECT ");
-        sql.append("time_bucket(?, time) as bucket, ");
+        sql.append("time_bucket(INTERVAL '").append(interval).append("', time) as bucket, ");
 
         // Add aggregation based on type
         if (query.getAggregationType().isPercentile()) {
@@ -206,9 +210,7 @@ public class JdbcMetricQueryRepository implements MetricQueryRepository {
 
     private List<Object> buildQueryParams(MetricQuery query) {
         List<Object> params = new ArrayList<>();
-        // Rollup period as interval string (e.g., '1 minute', '5 minutes')
-        String interval = formatInterval(query.getRollupPeriod());
-        params.add(interval);
+        // Note: interval is now embedded in SQL, so we don't add it to params
         params.add(query.getProjectId());
         params.add(query.getMetricName());
         params.add(Timestamp.from(query.getTimeRange().getStartTime()));
