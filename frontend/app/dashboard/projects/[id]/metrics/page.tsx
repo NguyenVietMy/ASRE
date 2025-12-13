@@ -340,15 +340,15 @@ export default function MetricsPage() {
             <div className="bg-[#0A0A0A] border border-border rounded-lg p-6">
               <div className="mb-4">
                 <h2 className="text-lg font-semibold mb-2">
-                  {data.metadata.metricName}
+                  {data.metric}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {data.metadata.aggregation} • {data.metadata.rollupPeriod}
+                  {data.stat}
                 </p>
               </div>
-              {data.dataPoints.length > 0 ? (
+              {data.data && data.data.length > 0 ? (
                 <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={data.dataPoints}>
+                  <LineChart data={data.data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2C" />
                     <XAxis
                       dataKey="timestamp"

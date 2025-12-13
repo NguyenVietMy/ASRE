@@ -6,12 +6,9 @@ export interface MetricDataPoint {
 }
 
 export interface MetricQueryResponse {
-  dataPoints: MetricDataPoint[];
-  metadata: {
-    metricName: string;
-    aggregation: string;
-    rollupPeriod: string;
-  };
+  metric: string;
+  stat: string;
+  data: MetricDataPoint[];
 }
 
 export interface MetricQueryParams {
@@ -66,11 +63,26 @@ export async function queryMetric(
   projectId: string,
   params: MetricQueryParams
 ): Promise<MetricQueryResponse> {
+  // Map frontend aggregation values to backend format (lowercase)
+  const aggregationMap: Record<string, string> = {
+    AVG: "avg",
+    SUM: "sum",
+    MIN: "min",
+    MAX: "max",
+    P95: "p95",
+    P99: "p99",
+  };
+  
   const response = await apiClient.get<MetricQueryResponse>(
     "/api/metrics/query",
     {
       params: {
-        ...params,
+        metric: params.metricName,
+        stat: params.aggregation ? aggregationMap[params.aggregation] || params.aggregation.toLowerCase() : "avg",
+        rollup: params.rollupPeriod || "5m",
+        startTime: params.startTime,
+        endTime: params.endTime,
+        serviceId: params.serviceId,
       },
       headers: {
         "X-Project-ID": projectId,
