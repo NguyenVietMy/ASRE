@@ -99,28 +99,28 @@ export default function ServiceDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-[#0A0A0A] border border-border rounded-lg p-6">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Total Metrics
+                  Open Incidents
                 </p>
                 <p className="text-3xl font-semibold">
-                  {overview.metrics.totalMetrics}
+                  {overview.openIncidents}
                 </p>
               </div>
               <div className="bg-[#0A0A0A] border border-border rounded-lg p-6">
-                <p className="text-sm text-muted-foreground mb-2">Total Logs</p>
+                <p className="text-sm text-muted-foreground mb-2">Error Rate</p>
                 <p className="text-3xl font-semibold">
-                  {overview.metrics.totalLogs}
+                  {overview.errorRate != null
+                    ? `${(overview.errorRate * 100).toFixed(2)}%`
+                    : "N/A"}
                 </p>
               </div>
               <div className="bg-[#0A0A0A] border border-border rounded-lg p-6">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Last Ingestion
+                  P95 Latency
                 </p>
-                <p className="text-sm font-medium">
-                  {overview.metrics.lastIngestionAt
-                    ? new Date(
-                        overview.metrics.lastIngestionAt
-                      ).toLocaleString()
-                    : "Never"}
+                <p className="text-3xl font-semibold">
+                  {overview.p95Latency != null
+                    ? `${overview.p95Latency.toFixed(2)}ms`
+                    : "N/A"}
                 </p>
               </div>
             </div>

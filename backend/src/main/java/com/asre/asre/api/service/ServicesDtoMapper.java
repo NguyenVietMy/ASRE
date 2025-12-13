@@ -18,18 +18,17 @@ public class ServicesDtoMapper {
     public ServiceResponse toResponse(Service service, List<Incident> recentIncidents) {
         String status = determineStatus(service, recentIncidents);
         int incidentCount = (int) recentIncidents.stream()
-                .filter(inc -> inc.getStatus().name().equals("OPEN") || 
-                              inc.getStatus().name().equals("ACKNOWLEDGED"))
+                .filter(inc -> inc.getStatus().name().equals("OPEN") ||
+                        inc.getStatus().name().equals("ACKNOWLEDGED"))
                 .count();
-        
+
         return new ServiceResponse(
                 service.getId(),
                 service.getName(),
                 service.getCreatedAt(),
                 service.getLastSeenAt(),
                 status,
-                incidentCount
-        );
+                incidentCount);
     }
 
     public ServiceDetailResponse toDetailResponse(Service service, int activeIncidents) {
@@ -39,8 +38,7 @@ public class ServicesDtoMapper {
                 service.getProjectId(),
                 service.getCreatedAt(),
                 service.getLastSeenAt(),
-                activeIncidents
-        );
+                activeIncidents);
     }
 
     public ServiceOverviewResponse toOverviewResponse(ServiceService.ServiceOverview overview) {
@@ -50,36 +48,34 @@ public class ServicesDtoMapper {
                 overview.errorRate(),
                 overview.p95Latency(),
                 overview.throughput(),
-                overview.openIncidents()
-        );
+                overview.openIncidents());
     }
 
     private String determineStatus(Service service, List<Incident> recentIncidents) {
         Instant now = Instant.now();
         Instant lastSeen = service.getLastSeenAt();
-        
+
         if (lastSeen == null) {
             return "Down";
         }
-        
+
         Duration timeSinceLastSeen = Duration.between(lastSeen, now);
-        
+
         // If last seen > 5 minutes ago, consider it Down
         if (timeSinceLastSeen.toMinutes() > 5) {
             return "Down";
         }
-        
+
         // Check for critical incidents
         boolean hasCriticalIncidents = recentIncidents.stream()
-                .anyMatch(inc -> inc.getSeverity().name().equals("CRITICAL") && 
-                               (inc.getStatus().name().equals("OPEN") || 
+                .anyMatch(inc -> inc.getSeverity().name().equals("CRITICAL") &&
+                        (inc.getStatus().name().equals("OPEN") ||
                                 inc.getStatus().name().equals("ACKNOWLEDGED")));
-        
+
         if (hasCriticalIncidents) {
             return "Degraded";
         }
-        
+
         return "Healthy";
     }
 }
-

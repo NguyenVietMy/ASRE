@@ -9,12 +9,12 @@ export interface Service {
 }
 
 export interface ServiceOverview {
-  service: Service;
-  metrics: {
-    totalMetrics: number;
-    totalLogs: number;
-    lastIngestionAt?: string;
-  };
+  serviceId: string;
+  serviceName: string;
+  errorRate?: number;
+  p95Latency?: number;
+  throughput?: number;
+  openIncidents: number;
 }
 
 // List services for a project

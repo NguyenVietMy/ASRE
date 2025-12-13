@@ -38,7 +38,6 @@ public class ServicesController {
         return UUID.fromString(authentication.getName());
     }
 
-
     @GetMapping
     public ResponseEntity<?> listServices(
             @RequestParam UUID projectId,
@@ -46,9 +45,9 @@ public class ServicesController {
         try {
             UUID userId = getCurrentUserId(authentication);
             projectService.validateProjectOwnership(projectId, userId);
-            
+
             List<Service> services = serviceService.listServices(projectId);
-            
+
             // Get recent incidents for each service
             List<ServiceResponse> responses = services.stream()
                     .map(service -> {
@@ -56,7 +55,7 @@ public class ServicesController {
                         return mapper.toResponse(service, incidents);
                     })
                     .collect(Collectors.toList());
-            
+
             return ResponseEntity.ok(responses);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -75,14 +74,14 @@ public class ServicesController {
         try {
             UUID userId = getCurrentUserId(authentication);
             projectService.validateProjectOwnership(projectId, userId);
-            
+
             Service service = serviceService.getService(id, projectId);
             List<Incident> incidents = serviceService.getServiceIncidents(id);
             int activeIncidents = (int) incidents.stream()
-                    .filter(inc -> inc.getStatus().name().equals("OPEN") || 
-                                  inc.getStatus().name().equals("ACKNOWLEDGED"))
+                    .filter(inc -> inc.getStatus().name().equals("OPEN") ||
+                            inc.getStatus().name().equals("ACKNOWLEDGED"))
                     .count();
-            
+
             ServiceDetailResponse response = mapper.toDetailResponse(service, activeIncidents);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -102,7 +101,7 @@ public class ServicesController {
         try {
             UUID userId = getCurrentUserId(authentication);
             projectService.validateProjectOwnership(projectId, userId);
-            
+
             ServiceService.ServiceOverview overview = serviceService.getServiceOverview(id, projectId);
             ServiceOverviewResponse response = mapper.toOverviewResponse(overview);
             return ResponseEntity.ok(response);
@@ -123,10 +122,10 @@ public class ServicesController {
         try {
             UUID userId = getCurrentUserId(authentication);
             projectService.validateProjectOwnership(projectId, userId);
-            
+
             // Validate service belongs to project
             serviceService.getService(id, projectId);
-            
+
             // TODO: Implement actual metric name discovery
             // For MVP, return empty list
             List<String> metricNames = serviceService.getServiceMetrics(id, projectId);
@@ -140,5 +139,3 @@ public class ServicesController {
         }
     }
 }
-
-

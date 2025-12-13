@@ -181,15 +181,15 @@ function ServiceCard({ service, projectId, onClick }: ServiceCardProps) {
       ) : overview ? (
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground mb-1">Metrics</p>
-            <p className="text-lg font-semibold">
-              {overview.metrics.totalMetrics}
-            </p>
+            <p className="text-muted-foreground mb-1">Open Incidents</p>
+            <p className="text-lg font-semibold">{overview.openIncidents}</p>
           </div>
           <div>
-            <p className="text-muted-foreground mb-1">Logs</p>
+            <p className="text-muted-foreground mb-1">Error Rate</p>
             <p className="text-lg font-semibold">
-              {overview.metrics.totalLogs}
+              {overview.errorRate != null
+                ? `${(overview.errorRate * 100).toFixed(2)}%`
+                : "N/A"}
             </p>
           </div>
         </div>

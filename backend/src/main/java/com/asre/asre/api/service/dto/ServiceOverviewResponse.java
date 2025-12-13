@@ -17,5 +17,3 @@ public class ServiceOverviewResponse {
     private Double throughput;
     private int openIncidents;
 }
-
-
