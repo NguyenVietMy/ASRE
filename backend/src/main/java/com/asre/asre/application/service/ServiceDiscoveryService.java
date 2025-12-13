@@ -1,6 +1,7 @@
 package com.asre.asre.application.service;
 
 import com.asre.asre.domain.service.Service;
+import com.asre.asre.domain.service.ServiceDiscoveryPort;
 import com.asre.asre.domain.service.ServiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +13,12 @@ import java.util.UUID;
 /**
  * Application service for service auto-discovery.
  * Called during ingestion to discover and register services.
+ * Implements ServiceDiscoveryPort domain interface.
  */
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
 @Slf4j
-public class ServiceDiscoveryService {
+public class ServiceDiscoveryService implements ServiceDiscoveryPort {
 
     private final ServiceRepository serviceRepository;
 
